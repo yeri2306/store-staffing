@@ -306,7 +306,31 @@ const T = {
   },
 };
 
-const useT = () => T[getLang()] || T.en;
+const useT = (lang) => T[lang] || T.en;
+
+const LANG_OPTIONS = [
+  {code:"en", label:"EN"},
+  {code:"ko", label:"한"},
+  {code:"ja", label:"JP"},
+  {code:"zh", label:"中"},
+];
+
+function LangSelector({ lang, setLang }) {
+  return (
+    <div style={{display:"flex",gap:4}}>
+      {LANG_OPTIONS.map(l=>(
+        <button key={l.code} type="button" onClick={()=>setLang(l.code)}
+          style={{padding:"3px 8px",fontSize:11,fontWeight:lang===l.code?600:400,cursor:"pointer",
+            border:`0.5px solid ${lang===l.code?"var(--color-border-primary)":"var(--color-border-tertiary)"}`,
+            borderRadius:"var(--border-radius-md)",
+            background:lang===l.code?"var(--color-text-primary)":"transparent",
+            color:lang===l.code?"var(--color-background-primary)":"var(--color-text-tertiary)"}}>
+          {l.label}
+        </button>
+      ))}
+    </div>
+  );
+}
 const inputStyle = (err) => ({
   width:"100%", boxSizing:"border-box", padding:"8px 11px",
   border:`0.5px solid ${err?"var(--color-border-danger)":"var(--color-border-secondary)"}`,
@@ -330,8 +354,9 @@ const btnPrimary = (disabled) => ({
 // App root — auth state machine
 // ══════════════════════════════════════════════════════════════════════════════
 export default function App() {
-  const [session, setSession] = useState(undefined); // undefined = initialising
+  const [session, setSession] = useState(undefined);
   const [profile, setProfile] = useState(null);
+  const [lang,    setLang]    = useState(getLang());
 
   const fetchProfile = async (uid) => {
     const {data} = await sb.from("profiles").select("*").eq("id",uid).single();
@@ -353,18 +378,18 @@ export default function App() {
 
   if (session === undefined) return (
     <div style={{display:"flex",alignItems:"center",justifyContent:"center",height:"60vh"}}>
-      <p style={{fontSize:13,color:"var(--color-text-secondary)"}}>{(T[getLang()]||T.en).loading}</p>
+      <p style={{fontSize:13,color:"var(--color-text-secondary)"}}>{(T[lang]||T.en).loading}</p>
     </div>
   );
-  if (!session) return <LoginScreen />;
-  if (!profile)  return <NoProfileScreen />;
-  if (profile.role === "hq") return <HqView profile={profile} />;
-  return <StoreView profile={profile} />;
+  if (!session) return <LoginScreen lang={lang} setLang={setLang}/>;
+  if (!profile)  return <NoProfileScreen lang={lang} setLang={setLang}/>;
+  if (profile.role === "hq") return <HqView profile={profile} lang={lang} setLang={setLang}/>;
+  return <StoreView profile={profile} lang={lang} setLang={setLang}/>;
 }
 
 const getLocalizedHint = () => (T[getLang()]||T.en).login_hint;
-function LoginScreen() {
-  const t = useT();
+function LoginScreen({ lang, setLang }) {
+  const t = useT(lang);
   const [email, setEmail] = useState("");
   const [pw,    setPw]    = useState("");
   const [err,   setErr]   = useState("");
@@ -383,6 +408,9 @@ function LoginScreen() {
 
   return (
     <div style={{minHeight:"100vh",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"flex-start",paddingTop:"12vh",padding:"12vh 1rem 2rem"}}>
+      <div style={{position:"absolute",top:"1.5rem",right:"1.5rem"}}>
+        <LangSelector lang={lang} setLang={setLang}/>
+      </div>
       <div style={{textAlign:"center",marginBottom:"4rem"}}>
         <p style={{fontFamily:"'GMSerif', serif",fontSize:52,fontWeight:400,margin:"0 0 14px",color:"var(--color-text-primary)",letterSpacing:"0.04em",lineHeight:1}}>IICOMBINED</p>
         <p style={{fontSize:13,fontWeight:400,margin:0,color:"var(--color-text-primary)",letterSpacing:"0.2em"}}>{t.title_sub}</p>
@@ -408,21 +436,19 @@ function LoginScreen() {
   );
 }
 
-function NoProfileScreen() {
-  const t = useT();
+function NoProfileScreen({ lang, setLang }) {
+  const t = useT(lang);
   return (
     <div style={{display:"flex",alignItems:"center",justifyContent:"center",height:"60vh",flexDirection:"column",gap:12}}>
+      <div style={{position:"absolute",top:"1.5rem",right:"1.5rem"}}><LangSelector lang={lang} setLang={setLang}/></div>
       <p style={{fontSize:14,color:"var(--color-text-secondary)"}}>{t.no_profile}</p>
       <button onClick={()=>sb.auth.signOut()} style={{fontSize:13,color:"var(--color-text-secondary)",background:"none",border:"none",cursor:"pointer"}}>{t.logout}</button>
     </div>
   );
 }
 
-// ══════════════════════════════════════════════════════════════════════════════
-// StoreView
-// ══════════════════════════════════════════════════════════════════════════════
-function StoreView({ profile }) {
-  const t = useT();
+function StoreView({ profile, lang, setLang }) {
+  const t = useT(lang);
   const blank = () => ({store_code:"", store_name:"", month:"", submitter:""});
   const [info,  setInfo]  = useState(blank());
   const [emps,  setEmps]  = useState([{id:1,name:"",type:"FT",contract_start:"",contract_end:"",hours:""}]);
@@ -459,7 +485,7 @@ function StoreView({ profile }) {
     setBusy(false);
     if (error) { setErr("저장 실패: " + error.message); return; }
     setInfo(blank());
-    setEmps([{id:1,name:"",type:"FT",contract_start:"",contract_end:"",hours:""}]);
+    setEmps([{id:1,name:"",type:"FT",job_title:"",contract_start:"",contract_end:"",hours:""}]);
     setSaved(true); setTimeout(()=>setSaved(false),3000);
     loadSubs();
   };
@@ -474,6 +500,7 @@ function StoreView({ profile }) {
       {/* 상단 우측: 이메일 + 로그아웃 */}
       <div style={{display:"flex",justifyContent:"flex-end",alignItems:"center",gap:16,marginBottom:"2rem"}}>
         <span style={{fontSize:12,color:"var(--color-text-secondary)"}}>{profile.email}</span>
+        <LangSelector lang={lang} setLang={setLang}/>
         <button onClick={()=>sb.auth.signOut()}
           style={{fontSize:12,color:"var(--color-text-tertiary)",background:"none",border:"0.5px solid var(--color-border-tertiary)",borderRadius:"var(--border-radius-md)",padding:"4px 12px",cursor:"pointer"}}>
           {t.logout}
@@ -623,7 +650,7 @@ function StoreView({ profile }) {
               style={{fontSize:12,padding:"5px 14px",borderRadius:"var(--border-radius-md)",
                 border:"0.5px solid var(--color-border-secondary)",background:"var(--color-background-secondary)",
                 color:"var(--color-text-primary)",cursor:"pointer"}}>
-              + 행 추가
+              {t.add_row}
             </button>
           </div>
         </div>
@@ -636,7 +663,7 @@ function StoreView({ profile }) {
             </colgroup>
             <thead>
               <tr>
-                {["#","성명","구분","계약 시작일","계약 종료일","계약 근로시간 (h/주)",""].map((h,i)=>(
+                {["#",t.col_name,t.col_type,t.col_start,t.col_end,t.col_hours,""].map((h,i)=>(
                   <th key={i} style={thStyle}>{h}</th>
                 ))}
               </tr>
@@ -648,7 +675,7 @@ function StoreView({ profile }) {
                   <tr key={e.id} style={{opacity:expired?.45:1}}>
                     <td style={{...tdBase,fontSize:11,color:"var(--color-text-tertiary)",textAlign:"center"}}>{i+1}</td>
                     <td style={tdBase}>
-                      <input value={e.name} onChange={ev=>editRow(e.id,"name",ev.target.value)} placeholder="홍길동"
+                      <input value={e.name} onChange={ev=>editRow(e.id,"name",ev.target.value)} placeholder={getLang()==="ko"?"홍길동":"Full name"}
                         style={{width:"100%",boxSizing:"border-box",padding:"5px 7px",border:"0.5px solid var(--color-border-secondary)",borderRadius:"var(--border-radius-md)",fontSize:12,background:"var(--color-background-primary)",color:"var(--color-text-primary)"}}/>
                     </td>
                     <td style={tdBase}>
@@ -684,7 +711,7 @@ function StoreView({ profile }) {
                       <div style={{display:"flex",alignItems:"center",gap:6}}>
                         <input type="number" min="1" max="60" value={e.hours} onChange={ev=>editRow(e.id,"hours",ev.target.value)} placeholder="예: 40"
                           style={{flex:1,minWidth:0,padding:"5px 7px",border:"0.5px solid var(--color-border-secondary)",borderRadius:"var(--border-radius-md)",fontSize:12,background:"var(--color-background-primary)",color:"var(--color-text-primary)"}}/>
-                        {expired&&<span style={{fontSize:10,color:"var(--color-text-danger)",whiteSpace:"nowrap"}}>만료</span>}
+                        {expired&&<span style={{fontSize:10,color:"var(--color-text-danger)",whiteSpace:"nowrap"}}>{t.expired_tag}</span>}
                       </div>
                     </td>
                     <td style={{...tdBase,textAlign:"center"}}>
@@ -702,15 +729,15 @@ function StoreView({ profile }) {
         {summary.total>0&&(
           <div style={{marginTop:14,background:"var(--color-background-secondary)",borderRadius:"var(--border-radius-md)",padding:"12px 14px"}}>
             <p style={{fontSize:11,fontWeight:500,color:"var(--color-text-secondary)",margin:"0 0 10px"}}>
-              자동 요약 <span style={{fontWeight:400,color:"var(--color-text-tertiary)"}}>· 마감월 기준 재직자만 집계</span>
+              {t.summary_title} <span style={{fontWeight:400,color:"var(--color-text-tertiary)"}}>· {t.summary_sub}</span>
             </p>
             <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:8,marginBottom:10}}>
               {[
-                {label:"FT 인원", val:`${summary.ft_count}명`, color:"#185FA5"},
-                {label:"PT 인원", val:`${summary.pt_count}명`, color:"#854F0B"},
-                {label:"총 인원", val:`${summary.total}명`,    color:"var(--color-text-primary)"},
-                {label:"FT 평균", val:summary.ft_count?`${f1(summary.ft_avg_h)}h`:"—", color:"var(--color-text-secondary)"},
-                {label:"PT 평균", val:summary.pt_count?`${f1(summary.pt_avg_h)}h`:"—", color:"var(--color-text-secondary)"},
+                {label:t.ft_count, val:`${summary.ft_count}`, color:"#185FA5"},
+                {label:t.pt_count, val:`${summary.pt_count}`, color:"#854F0B"},
+                {label:t.total,    val:`${summary.total}`,    color:"var(--color-text-primary)"},
+                {label:t.ft_avg,   val:summary.ft_count?`${f1(summary.ft_avg_h)}h`:"—", color:"var(--color-text-secondary)"},
+                {label:t.pt_avg,   val:summary.pt_count?`${f1(summary.pt_avg_h)}h`:"—", color:"var(--color-text-secondary)"},
               ].map(c=>(
                 <div key={c.label} style={{textAlign:"center",padding:"8px",background:"var(--color-background-primary)",borderRadius:"var(--border-radius-md)"}}>
                   <div style={{fontSize:11,color:"var(--color-text-tertiary)",marginBottom:4}}>{c.label}</div>
@@ -720,14 +747,14 @@ function StoreView({ profile }) {
             </div>
             {summary.excluded>0&&(
               <div style={{padding:"7px 12px",background:"var(--color-background-danger)",borderRadius:"var(--border-radius-md)",fontSize:12,color:"var(--color-text-danger)",marginBottom:10}}>
-                계약 만료 {summary.excluded}명 — 마감월 이전 종료, 집계 제외
+                {t.expired_msg(summary.excluded)}
               </div>
             )}
             <div style={{display:"flex",alignItems:"center",gap:12,padding:"10px 14px",background:"var(--color-background-primary)",borderRadius:"var(--border-radius-md)"}}>
               <div>
-                <div style={{fontSize:11,color:"var(--color-text-tertiary)"}}>FTE 환산</div>
+                <div style={{fontSize:11,color:"var(--color-text-tertiary)"}}>{t.fte_label}</div>
                 <div style={{fontSize:22,fontWeight:500,color:"var(--color-text-primary)"}}>{f2(summary.fte)}</div>
-                <div style={{fontSize:10,color:"var(--color-text-tertiary)"}}>총 {summary.total_h}h ÷ {STANDARD_HOURS}h</div>
+                <div style={{fontSize:10,color:"var(--color-text-tertiary)"}}>{t.fte_sub(summary.total_h, STANDARD_HOURS)}</div>
               </div>
               <div style={{flex:1}}>
                 <div style={{display:"flex",justifyContent:"space-between",fontSize:10,color:"var(--color-text-tertiary)",marginBottom:4}}>
@@ -747,19 +774,18 @@ function StoreView({ profile }) {
       {err&&<p style={{fontSize:12,color:"var(--color-text-danger)",margin:"0 0 8px"}}>{err}</p>}
       <button onClick={submit} disabled={busy}
         style={{...btnPrimary(busy), background:saved?"#1D9E75":busy?"var(--color-border-secondary)":"var(--color-text-primary)",transition:"background .25s",marginBottom:"1.5rem"}}>
-        {saved?"✓ 저장되었습니다":busy?"저장 중...":"제출하기"}
+        {saved?t.submit_ok:busy?t.submit_loading:t.submit_btn}
       </button>
 
-      {/* 이력 */}
       {subs.length>0&&(
         <div>
-          <p style={{fontSize:12,fontWeight:500,color:"var(--color-text-secondary)",marginBottom:10}}>{profile.country} 제출 이력 ({subs.length}건)</p>
+          <p style={{fontSize:12,fontWeight:500,color:"var(--color-text-secondary)",marginBottom:10}}>{t.history_title(profile.country, subs.length)}</p>
           {subs.map(s=>{
             const sm=calcSummary(s.employees||[], s.month);
             return (
               <div key={s.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"10px 14px",background:"var(--color-background-secondary)",borderRadius:"var(--border-radius-md)",marginBottom:8}}>
                 <div>
-                  <span style={{fontSize:13,fontWeight:500,color:"var(--color-text-primary)"}}>{s.month} · {s.store_name?.split(" ").slice(-1)[0]}</span>
+                  <span style={{fontSize:13,fontWeight:500,color:"var(--color-text-primary)"}}>{s.month} · {s.store_name?.split("_").slice(-1)[0]}</span>
                   <span style={{fontSize:12,color:"var(--color-text-tertiary)",marginLeft:10}}>{s.submitter}</span>
                 </div>
                 <div style={{fontSize:12,color:"var(--color-text-secondary)",textAlign:"right"}}>
@@ -777,7 +803,7 @@ function StoreView({ profile }) {
 // ══════════════════════════════════════════════════════════════════════════════
 // HqView
 // ══════════════════════════════════════════════════════════════════════════════
-function HqView({ profile }) {
+function HqView({ profile, lang, setLang }) {
   const [tab,     setTab]     = useState("dashboard");
   const [subs,    setSubs]    = useState([]);
   const [sapData, setSapData] = useState([]);
@@ -809,6 +835,7 @@ function HqView({ profile }) {
     return Object.values(m);
   })();
 
+  const tl = useT(lang);
   const ts = t => ({padding:"7px 18px",fontSize:13,cursor:"pointer",border:"none",background:"none",
     borderBottom:tab===t?"2px solid var(--color-text-primary)":"2px solid transparent",
     color:tab===t?"var(--color-text-primary)":"var(--color-text-secondary)",fontWeight:tab===t?500:400});
@@ -817,30 +844,31 @@ function HqView({ profile }) {
     <div style={{maxWidth:900,margin:"0 auto",padding:"1.5rem 1rem"}}>
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"1.25rem"}}>
         <div>
-          <p style={{fontSize:16,fontWeight:500,margin:0,color:"var(--color-text-primary)"}}>HQ 대시보드</p>
+          <p style={{fontSize:16,fontWeight:500,margin:0,color:"var(--color-text-primary)"}}>{tl.hq_title}</p>
           <p style={{fontSize:12,color:"var(--color-text-secondary)",margin:"3px 0 0"}}>
-            {profile.email} · 인력 제출 {subs.length}건 · SAP {sapData.length}행
+            {profile.email} · {tl.hq_sub(subs.length, sapData.length)}
           </p>
         </div>
         <div style={{display:"flex",gap:12,alignItems:"center"}}>
-          <button onClick={loadAll} style={{fontSize:12,color:"var(--color-text-secondary)",background:"none",border:"none",cursor:"pointer"}}>↻ 새로고침</button>
-          <button onClick={()=>sb.auth.signOut()} style={{fontSize:12,color:"var(--color-text-tertiary)",background:"none",border:"none",cursor:"pointer"}}>로그아웃</button>
+          <LangSelector lang={lang} setLang={setLang}/>
+          <button onClick={loadAll} style={{fontSize:12,color:"var(--color-text-secondary)",background:"none",border:"none",cursor:"pointer"}}>{tl.refresh}</button>
+          <button onClick={()=>sb.auth.signOut()} style={{fontSize:12,color:"var(--color-text-tertiary)",background:"none",border:"0.5px solid var(--color-border-tertiary)",borderRadius:"var(--border-radius-md)",padding:"4px 12px",cursor:"pointer"}}>{tl.logout}</button>
         </div>
       </div>
 
       <div style={{borderBottom:"0.5px solid var(--color-border-tertiary)",marginBottom:"1.25rem",display:"flex"}}>
-        {[["dashboard","대시보드"],["upload","SAP 업로드"],["raw","원본 데이터"],["users","사용자 관리"]].map(([t,l])=>(
-          <button key={t} style={ts(t)} onClick={()=>setTab(t)}>{l}</button>
+        {[["dashboard",tl.tab_dashboard],["upload",tl.tab_upload],["raw",tl.tab_raw],["users",tl.tab_users]].map(([tv,l])=>(
+          <button key={tv} style={ts(tv)} onClick={()=>setTab(tv)}>{l}</button>
         ))}
       </div>
 
       {loading
-        ? <p style={{fontSize:13,color:"var(--color-text-secondary)",textAlign:"center",padding:"2rem"}}>데이터 로딩 중...</p>
+        ? <p style={{fontSize:13,color:"var(--color-text-secondary)",textAlign:"center",padding:"2rem"}}>{tl.loading}</p>
         : <>
-            {tab==="dashboard" && <HqDashboard subs={subs} sapData={sapData} merged={merged}/>}
-            {tab==="upload"    && <HqUpload sapData={sapData} onDone={loadAll}/>}
-            {tab==="raw"       && <HqRaw merged={merged} subs={subs}/>}
-            {tab==="users"     && <HqUsers/>}
+            {tab==="dashboard" && <HqDashboard subs={subs} sapData={sapData} merged={merged} lang={lang}/>}
+            {tab==="upload"    && <HqUpload sapData={sapData} onDone={loadAll} lang={lang}/>}
+            {tab==="raw"       && <HqRaw merged={merged} subs={subs} lang={lang}/>}
+            {tab==="users"     && <HqUsers lang={lang}/>}
           </>
       }
     </div>
@@ -848,7 +876,8 @@ function HqView({ profile }) {
 }
 
 // ── HqUsers ───────────────────────────────────────────────────────────────────
-function HqUsers() {
+function HqUsers({ lang }) {
+  const t = useT(lang);
   const [users,   setUsers]   = useState([]);
   const [email,   setEmail]   = useState("");
   const [country, setCountry] = useState("");
@@ -880,7 +909,7 @@ function HqUsers() {
         email, password: pw,
         options:{ data:{ role, country: role==="hq"?null:country } }
       });
-      if (e2) { setMsg("생성 실패: "+e2.message); setBusy(false); return; }
+      if (e2) { setMsg(t.inv_err_fields+" "+e2.message); setBusy(false); return; }
     }
     // 2. profiles 직접 upsert (트리거 실패 대비)
     await sb.from("profiles").upsert({
@@ -902,29 +931,29 @@ function HqUsers() {
     <div style={{maxWidth:700}}>
       {/* 신규 계정 생성 */}
       <div style={{background:"var(--color-background-primary)",border:"0.5px solid var(--color-border-tertiary)",borderRadius:"var(--border-radius-lg)",padding:"1.25rem",marginBottom:"1.5rem"}}>
-        <p style={{fontSize:13,fontWeight:500,color:"var(--color-text-primary)",margin:"0 0 14px"}}>신규 계정 발급</p>
+        <p style={{fontSize:13,fontWeight:500,color:"var(--color-text-primary)",margin:"0 0 14px"}}>{t.invite_title}</p>
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:10}}>
           <div>
-            <label style={{fontSize:11,color:"var(--color-text-secondary)",display:"block",marginBottom:4}}>이메일 *</label>
+            <label style={{fontSize:11,color:"var(--color-text-secondary)",display:"block",marginBottom:4}}>{t.inv_email}</label>
             <input value={email} onChange={e=>setEmail(e.target.value)} placeholder="name@company.com"
               style={{...ss(),boxSizing:"border-box"}}/>
           </div>
           <div>
-            <label style={{fontSize:11,color:"var(--color-text-secondary)",display:"block",marginBottom:4}}>비밀번호 *</label>
-            <input type="password" value={pw} onChange={e=>setPw(e.target.value)} placeholder="초기 비밀번호"
+            <label style={{fontSize:11,color:"var(--color-text-secondary)",display:"block",marginBottom:4}}>{t.inv_pw}</label>
+            <input type="password" value={pw} onChange={e=>setPw(e.target.value)} placeholder="Initial password"
               style={{...ss(),boxSizing:"border-box"}}/>
           </div>
           <div>
-            <label style={{fontSize:11,color:"var(--color-text-secondary)",display:"block",marginBottom:4}}>역할 *</label>
+            <label style={{fontSize:11,color:"var(--color-text-secondary)",display:"block",marginBottom:4}}>{t.inv_role}</label>
             <select value={role} onChange={e=>setRole(e.target.value)} style={ss()}>
-              <option value="store">매장 담당자</option>
-              <option value="hq">HQ (전체 조회)</option>
+              <option value="store">{t.role_store}</option>
+              <option value="hq">{t.role_hq}</option>
             </select>
           </div>
           <div>
-            <label style={{fontSize:11,color:"var(--color-text-secondary)",display:"block",marginBottom:4}}>담당 국가 {role==="store"?"*":""}</label>
+            <label style={{fontSize:11,color:"var(--color-text-secondary)",display:"block",marginBottom:4}}>{t.inv_country}{role==="store"?" *":""}</label>
             <select value={country} onChange={e=>setCountry(e.target.value)} disabled={role==="hq"} style={{...ss(),opacity:role==="hq"?0.4:1}}>
-              <option value="">{role==="hq"?"전체 (HQ)":"국가 선택"}</option>
+              <option value="">{role==="hq"?t.role_hq:t.select}</option>
               {COUNTRIES.map(c=><option key={c} value={c}>{c}</option>)}
             </select>
           </div>
@@ -932,21 +961,18 @@ function HqUsers() {
         {msg&&<p style={{fontSize:12,color:msg.startsWith("✓")?"var(--color-text-success)":"var(--color-text-danger)",margin:"0 0 10px"}}>{msg}</p>}
         <button onClick={invite} disabled={busy}
           style={{width:"100%",padding:"10px",border:"none",borderRadius:"var(--border-radius-md)",background:busy?"var(--color-border-secondary)":"var(--color-text-primary)",color:"var(--color-background-primary)",fontSize:13,fontWeight:500,cursor:busy?"default":"pointer"}}>
-          {busy?"생성 중...":"계정 생성"}
+          {busy?t.inv_loading:t.inv_btn}
         </button>
-        <p style={{fontSize:11,color:"var(--color-text-tertiary)",margin:"8px 0 0"}}>
-          생성 후 해당 이메일로 비밀번호를 별도 공유하세요. 첫 로그인 후 비밀번호 변경을 권장합니다.
-        </p>
+        <p style={{fontSize:11,color:"var(--color-text-tertiary)",margin:"8px 0 0"}}>{t.inv_hint}</p>
       </div>
 
-      {/* 기존 사용자 목록 */}
-      <p style={{fontSize:12,fontWeight:500,color:"var(--color-text-secondary)",marginBottom:10}}>등록된 사용자 ({users.length}명)</p>
-      {loading ? <p style={{fontSize:13,color:"var(--color-text-secondary)"}}>로딩 중...</p> : (
+      <p style={{fontSize:12,fontWeight:500,color:"var(--color-text-secondary)",marginBottom:10}}>{t.users_list(users.length)}</p>
+      {loading ? <p style={{fontSize:13,color:"var(--color-text-secondary)"}}>{t.loading}</p> : (
         <div style={{border:"0.5px solid var(--color-border-tertiary)",borderRadius:"var(--border-radius-lg)",overflow:"hidden"}}>
           <table style={{width:"100%",borderCollapse:"collapse"}}>
             <thead>
               <tr style={{background:"var(--color-background-secondary)"}}>
-                {["이메일","역할","담당 국가","변경"].map(h=>(
+                {[t.col_email,t.col_role,t.col_country_h,t.col_change].map(h=>(
                   <th key={h} style={{fontSize:11,fontWeight:500,color:"var(--color-text-secondary)",padding:"7px 12px",textAlign:"left",borderBottom:"0.5px solid var(--color-border-secondary)"}}>{h}</th>
                 ))}
               </tr>
@@ -959,17 +985,17 @@ function HqUsers() {
                     <span style={{padding:"2px 8px",borderRadius:99,fontSize:11,fontWeight:600,
                       background:u.role==="hq"?"#E6F1FB":"#E1F5EE",
                       color:u.role==="hq"?"#0C447C":"#085041"}}>
-                      {u.role==="hq"?"HQ":"매장"}
+                      {u.role==="hq"?t.hq_badge:t.store_badge}
                     </span>
                   </td>
-                  <td style={{padding:"9px 12px",fontSize:12,borderBottom:"0.5px solid var(--color-border-tertiary)",color:"var(--color-text-secondary)"}}>{u.country||"전체"}</td>
+                  <td style={{padding:"9px 12px",fontSize:12,borderBottom:"0.5px solid var(--color-border-tertiary)",color:"var(--color-text-secondary)"}}>{u.country||t.role_hq}</td>
                   <td style={{padding:"9px 12px",borderBottom:"0.5px solid var(--color-border-tertiary)"}}>
                     <select defaultValue={u.country||""} onChange={e=>{
                       const val=e.target.value;
                       if(val==="hq") updateRole(u.id,"hq",null);
                       else updateRole(u.id,"store",val);
                     }} style={{padding:"4px 8px",border:"0.5px solid var(--color-border-secondary)",borderRadius:"var(--border-radius-md)",fontSize:11,background:"var(--color-background-primary)",color:"var(--color-text-primary)"}}>
-                      <option value="hq">HQ (전체)</option>
+                      <option value="hq">{t.role_hq}</option>
                       {COUNTRIES.map(c=><option key={c} value={c}>{c}</option>)}
                     </select>
                   </td>
@@ -984,10 +1010,11 @@ function HqUsers() {
 }
 
 // ── HqDashboard ───────────────────────────────────────────────────────────────
-function HqDashboard({ subs, sapData, merged }) {
+function HqDashboard({ subs, sapData, merged, lang }) {
+  const t = useT(lang);
   if (!subs.length && !sapData.length) return (
     <div style={{textAlign:"center",padding:"3rem",color:"var(--color-text-secondary)",fontSize:13}}>
-      아직 수집된 데이터가 없습니다.
+      {t.no_data}
     </div>
   );
 
@@ -1127,7 +1154,8 @@ function HqDashboard({ subs, sapData, merged }) {
 }
 
 // ── HqUpload ──────────────────────────────────────────────────────────────────
-function HqUpload({ sapData, onDone }) {
+function HqUpload({ sapData, onSaveSap, onDone, lang }) {
+  const t = useT(lang);
   const [preview,  setPreview]  = useState(null);
   const [colMap,   setColMap]   = useState({});
   const [headers,  setHeaders]  = useState([]);
@@ -1167,44 +1195,42 @@ function HqUpload({ sapData, onDone }) {
     // upsert by (store_code, month) — 중복 업로드 시 덮어씀
     const {error} = await sb.from("sap_data").upsert(rows, {onConflict:"store_code,month"});
     setBusy(false);
-    if(error){setStatus("업로드 실패: "+error.message);return;}
-    setStatus(`✓ ${rows.length}행 업로드 완료`);
+      if(error){setStatus(t.err_save+error.message);return;}
+    setStatus(`✓ ${rows.length} rows uploaded`);
     setPreview(null);setHeaders([]);setColMap({});
     if(fileRef.current)fileRef.current.value="";
     onDone();
   };
 
   const downloadTemplate = () => {
-    const cols=["매장코드","국가","매장명","월","매출","입점객","달성율","저품율"];
-    const sample=[["KR_STORE_01","KR","GM_서울 루쿠스노바에 서울","2025-03",158000000,3200,92.5,1.2]];
+    const cols=["store_code","country","store_name","month","sales","visitors","achievement_rate","defect_rate"];
+    const sample=[["US1001","US","GM_NewYork_FS_Soho","2025-03",158000000,3200,92.5,1.2]];
     const ws=XLSX.utils.aoa_to_sheet([cols,...sample]);
-    ws["!cols"]=cols.map(()=>({wch:16}));
+    ws["!cols"]=cols.map(()=>({wch:18}));
     const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,"SAP_Data");
-    XLSX.writeFile(wb,"SAP_업로드_템플릿.xlsx");
+    XLSX.writeFile(wb,"SAP_Upload_Template.xlsx");
   };
 
   return (
     <div style={{maxWidth:700}}>
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
-        <p style={{fontSize:13,color:"var(--color-text-secondary)",margin:0}}>
-          SAP 엑셀을 업로드하면 <strong>매장코드 기준</strong>으로 자동 매핑됩니다. 중복 업로드 시 덮어씁니다.
-        </p>
+        <p style={{fontSize:13,color:"var(--color-text-secondary)",margin:0}}>{t.sap_desc}</p>
         <button onClick={downloadTemplate}
           style={{fontSize:12,padding:"6px 14px",border:"0.5px solid var(--color-border-secondary)",borderRadius:"var(--border-radius-md)",background:"var(--color-background-secondary)",color:"var(--color-text-primary)",cursor:"pointer",whiteSpace:"nowrap",marginLeft:12}}>
-          템플릿 다운로드
+          {t.sap_dl}
         </button>
       </div>
 
       <label style={{display:"block",border:"1px dashed var(--color-border-secondary)",borderRadius:"var(--border-radius-lg)",padding:"2rem",textAlign:"center",cursor:"pointer",marginBottom:14}}>
         <input ref={fileRef} type="file" accept=".xlsx,.xls,.csv" onChange={onFile} style={{display:"none"}}/>
-        <div style={{fontSize:14,color:"var(--color-text-secondary)"}}>클릭하거나 파일을 드래그하여 업로드</div>
+        <div style={{fontSize:14,color:"var(--color-text-secondary)"}}>Click or drag file to upload</div>
         <div style={{fontSize:12,color:"var(--color-text-tertiary)",marginTop:4}}>.xlsx · .xls · .csv</div>
       </label>
 
       {preview&&(
         <div style={{...cardStyle,marginBottom:12}}>
           <p style={{fontSize:12,fontWeight:500,color:"var(--color-text-secondary)",margin:"0 0 12px"}}>
-            컬럼 매핑 <span style={{fontWeight:400,color:"var(--color-text-tertiary)"}}>({preview.length}행 인식됨)</span>
+            {t.col_map} <span style={{fontWeight:400,color:"var(--color-text-tertiary)"}}>{t.preview(preview.length)}</span>
           </p>
           <div style={{display:"grid",gap:8,marginBottom:16}}>
             {SAP_FIELDS.map(f=>(
@@ -1212,7 +1238,7 @@ function HqUpload({ sapData, onDone }) {
                 <span style={{fontSize:12,color:f.required?"var(--color-text-primary)":"var(--color-text-secondary)"}}>{f.label}{f.required?" *":""}</span>
                 <select value={colMap[f.key]||""} onChange={e=>setColMap(p=>({...p,[f.key]:e.target.value||undefined}))}
                   style={{...inputStyle(f.required&&!colMap[f.key]),padding:"6px 10px"}}>
-                  <option value="">— 매핑 안 함</option>
+                  <option value="">{t.map_none}</option>
                   {headers.map(h=><option key={h} value={h}>{h}</option>)}
                 </select>
               </div>
@@ -1230,9 +1256,8 @@ function HqUpload({ sapData, onDone }) {
               </tbody>
             </table>
           </div>
-          <button onClick={applyMap} disabled={busy}
-            style={btnPrimary(busy)}>
-            {busy?`업로드 중...`:`${preview.length}행 Supabase에 저장`}
+          <button onClick={applyMap} disabled={busy} style={btnPrimary(busy)}>
+            {busy?t.sap_uploading:t.sap_ul_btn(preview.length)}
           </button>
         </div>
       )}
@@ -1241,7 +1266,7 @@ function HqUpload({ sapData, onDone }) {
 
       {sapData.length>0&&(
         <div style={{marginTop:14,display:"flex",alignItems:"center",justifyContent:"space-between"}}>
-          <span style={{fontSize:12,color:"var(--color-text-secondary)"}}>현재 SAP 데이터: {sapData.length}행</span>
+          <span style={{fontSize:12,color:"var(--color-text-secondary)"}}>{t.sap_current(sapData.length)}</span>
         </div>
       )}
     </div>
@@ -1249,7 +1274,8 @@ function HqUpload({ sapData, onDone }) {
 }
 
 // ── HqRaw ─────────────────────────────────────────────────────────────────────
-function HqRaw({ merged, subs }) {
+function HqRaw({ merged, subs, lang }) {
+  const t = useT(lang);
   const [fc,setFc]=useState("ALL"); const [fm,setFm]=useState("ALL");
   const months=[...new Set(merged.map(r=>r.month).filter(Boolean))].sort();
   const countries=[...new Set(merged.map(r=>r.country).filter(Boolean))].sort();
@@ -1297,30 +1323,30 @@ function HqRaw({ merged, subs }) {
     <div>
       <div style={{display:"flex",gap:10,marginBottom:12,flexWrap:"wrap",alignItems:"center"}}>
         <select value={fc} onChange={e=>setFc(e.target.value)} style={{...inputStyle(false),width:"auto",padding:"6px 10px"}}>
-          <option value="ALL">전체 국가</option>
+          <option value="ALL">{t.filter_all_c}</option>
           {countries.map(c=><option key={c} value={c}>{c}</option>)}
         </select>
         <select value={fm} onChange={e=>setFm(e.target.value)} style={{...inputStyle(false),width:"auto",padding:"6px 10px"}}>
-          <option value="ALL">전체 월</option>
+          <option value="ALL">{t.filter_all_m}</option>
           {months.map(m=><option key={m} value={m}>{m}</option>)}
         </select>
-        <span style={{fontSize:12,color:"var(--color-text-tertiary)",flex:1}}>{rows.length}건</span>
+        <span style={{fontSize:12,color:"var(--color-text-tertiary)",flex:1}}>{rows.length}</span>
         {rows.length>0&&(
           <button onClick={downloadExcel}
             style={{padding:"6px 16px",fontSize:12,fontWeight:500,border:"0.5px solid var(--color-border-secondary)",borderRadius:"var(--border-radius-md)",background:"var(--color-text-primary)",color:"var(--color-background-primary)",cursor:"pointer",whiteSpace:"nowrap"}}>
-            엑셀 다운로드
+            {t.dl_excel}
           </button>
         )}
       </div>
 
       {!rows.length
-        ? <div style={{textAlign:"center",padding:"2rem",color:"var(--color-text-secondary)",fontSize:13}}>데이터가 없습니다</div>
+        ? <div style={{textAlign:"center",padding:"2rem",color:"var(--color-text-secondary)",fontSize:13}}>{t.no_data}</div>
         : (
           <div style={{overflowX:"auto",border:"0.5px solid var(--color-border-tertiary)",borderRadius:"var(--border-radius-lg)",overflow:"hidden"}}>
             <table style={{width:"100%",borderCollapse:"collapse"}}>
               <thead>
                 <tr>
-                  {["국가","매장코드","월","매출","입점객","달성율","FT","PT","FTE","매출/FTE","입점객/FTE","제출자"].map((h,i)=>(
+                  {["Country","Store Code","Month","Sales","Visitors","Ach. Rate","FT","PT","FTE","Sales/FTE","Visitors/FTE","Submitter"].map((h,i)=>(
                     <th key={h} style={{...thS,textAlign:i<2?"left":"right"}}>{h}</th>
                   ))}
                 </tr>
