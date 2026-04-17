@@ -496,6 +496,8 @@ function StoreView({ profile, lang, setLang }) {
     const stores = STORE_MAP[profile.country]||[];
     return q ? stores.filter(s=>s.name.toLowerCase().includes(q)||s.code.toLowerCase().includes(q)) : stores;
   })();
+
+  const thStyle = {fontSize:11,fontWeight:500,color:"var(--color-text-secondary)",
     padding:"7px 8px",textAlign:"left",borderBottom:"0.5px solid var(--color-border-secondary)",
     background:"var(--color-background-secondary)",whiteSpace:"nowrap"};
   const tdBase = {padding:"6px 6px",borderBottom:"0.5px solid var(--color-border-tertiary)"};
