@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { createClient } from "@supabase/supabase-js";
 import * as XLSX from "xlsx";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend } from "recharts";
@@ -7,8 +7,8 @@ import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianG
 // ① supabase.com 에서 프로젝트 생성 후 아래 두 값을 교체하세요
 //    Project Settings → API → Project URL / anon public key
 // ─────────────────────────────────────────────────────────────────────────────
-const SUPABASE_URL      = "https://crmcnjydqsecexogknlz.supabase.co";
-const SUPABASE_ANON_KEY = "sb_publishable_3ZiYHyL4l39Wd5t4aURI2g_rUt3DJ5q";
+const SUPABASE_URL      = "https://YOUR_PROJECT.supabase.co";
+const SUPABASE_ANON_KEY = "YOUR_ANON_KEY";
 const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // ── Custom font injection ─────────────────────────────────────────────────────
@@ -450,8 +450,9 @@ function NoProfileScreen({ lang, setLang }) {
 function StoreView({ profile, lang, setLang }) {
   const t = useT(lang);
   const blank = () => ({store_code:"", store_name:"", month:"", submitter:""});
-  const [info,  setInfo]  = useState(blank());
-  const [emps,  setEmps]  = useState([{id:1,name:"",type:"FT",contract_start:"",contract_end:"",hours:""}]);
+  const [info,       setInfo]      = useState(blank());
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [emps,  setEmps]  = useState([{id:1,name:"",type:"FT",job_title:"",contract_start:"",contract_end:"",hours:""}]);
   const [subs,  setSubs]  = useState([]);
   const [saved, setSaved] = useState(false);
   const [err,   setErr]   = useState("");
@@ -522,13 +523,13 @@ function StoreView({ profile, lang, setLang }) {
             <input
               value={info.store_name}
               onChange={e=>{ si("store_name",e.target.value); si("store_code",""); }}
-              onFocus={()=>si("_search_open",true)}
-              onBlur={()=>setTimeout(()=>si("_search_open",false),150)}
+              onFocus={()=>setSearchOpen(true)}
+              onBlur={()=>setTimeout(()=>setSearchOpen(false),200)}
               placeholder={t.store_ph}
               style={{...inputStyle(false),padding:"7px 10px"}}
               autoComplete="off"
             />
-            {info._search_open && (() => {
+            {searchOpen && (() => {
               const q = (info.store_name||"").toLowerCase();
               const stores = STORE_MAP[profile.country]||[];
               const matches = q
@@ -536,9 +537,10 @@ function StoreView({ profile, lang, setLang }) {
                 : stores;
               if (!matches.length) return null;
               return (
-                <div style={{position:"absolute",top:"100%",left:0,right:0,zIndex:100,background:"var(--color-background-primary)",border:"0.5px solid var(--color-border-secondary)",borderRadius:"var(--border-radius-md)",boxShadow:"0 4px 12px rgba(0,0,0,0.08)",marginTop:2,maxHeight:220,overflowY:"auto"}}>
+                <div style={{position:"absolute",top:"100%",left:0,right:0,zIndex:1000,background:"var(--color-background-primary)",border:"0.5px solid var(--color-border-secondary)",borderRadius:"var(--border-radius-md)",boxShadow:"0 4px 12px rgba(0,0,0,0.12)",marginTop:2,maxHeight:220,overflowY:"auto"}}>
                   {matches.map(s=>(
-                    <div key={s.code} onMouseDown={()=>{ si("store_name",s.name); si("store_code",s.code); si("_search_open",false); }}
+                    <div key={s.code}
+                      onMouseDown={e=>{ e.preventDefault(); si("store_name",s.name); si("store_code",s.code); setSearchOpen(false); }}
                       style={{padding:"9px 12px",fontSize:13,cursor:"pointer",borderBottom:"0.5px solid var(--color-border-tertiary)",display:"flex",justifyContent:"space-between",alignItems:"center"}}
                       onMouseEnter={e=>e.currentTarget.style.background="var(--color-background-secondary)"}
                       onMouseLeave={e=>e.currentTarget.style.background="transparent"}>
@@ -601,7 +603,7 @@ function StoreView({ profile, lang, setLang }) {
                   const submitter = info.submitter;
 
                   if(hasStoreCol) {
-                    if(!month||!submitter){ alert("마감 월과 제출자를 먼저 입력해주세요."); return; }
+                    if(!month||!submitter){ alert(t.err_basic); return; }
                     const rows = raw.slice(1).filter(r=>r[0]||r[2]);
                     const byStore = {};
                     rows.forEach((r,i)=>{
@@ -628,7 +630,7 @@ function StoreView({ profile, lang, setLang }) {
                     }
                     setBusy(false);
                     setSaved(true); setTimeout(()=>setSaved(false),3000);
-                    alert(`✓ ${Object.keys(byStore).length}개 매장 일괄 제출 완료`);
+                    alert(`✓ ${Object.keys(byStore).length} stores submitted`);
                     loadSubs();
                   } else {
                     const rows=raw.slice(1).filter(r=>r[0]).map((r,i)=>({
@@ -675,7 +677,7 @@ function StoreView({ profile, lang, setLang }) {
                   <tr key={e.id} style={{opacity:expired?.45:1}}>
                     <td style={{...tdBase,fontSize:11,color:"var(--color-text-tertiary)",textAlign:"center"}}>{i+1}</td>
                     <td style={tdBase}>
-                      <input value={e.name} onChange={ev=>editRow(e.id,"name",ev.target.value)} placeholder={getLang()==="ko"?"홍길동":"Full name"}
+                      <input value={e.name} onChange={ev=>editRow(e.id,"name",ev.target.value)} placeholder={lang==="ko"?"홍길동":lang==="ja"?"山田太郎":lang==="zh"?"张三":"Full Name"}
                         style={{width:"100%",boxSizing:"border-box",padding:"5px 7px",border:"0.5px solid var(--color-border-secondary)",borderRadius:"var(--border-radius-md)",fontSize:12,background:"var(--color-background-primary)",color:"var(--color-text-primary)"}}/>
                     </td>
                     <td style={tdBase}>
@@ -696,11 +698,13 @@ function StoreView({ profile, lang, setLang }) {
                       </div>
                     </td>
                     <td style={tdBase}>
-                      <input type="date" value={e.contract_start} onChange={ev=>editRow(e.id,"contract_start",ev.target.value)}
+                      <input type="text" value={e.contract_start} onChange={ev=>editRow(e.id,"contract_start",ev.target.value)}
+                        placeholder="YYYY-MM-DD"
                         style={{width:"100%",boxSizing:"border-box",padding:"5px 6px",border:"0.5px solid var(--color-border-secondary)",borderRadius:"var(--border-radius-md)",fontSize:12,background:"var(--color-background-primary)",color:"var(--color-text-primary)"}}/>
                     </td>
                     <td style={tdBase}>
-                      <input type="date" value={e.contract_end} onChange={ev=>editRow(e.id,"contract_end",ev.target.value)}
+                      <input type="text" value={e.contract_end} onChange={ev=>editRow(e.id,"contract_end",ev.target.value)}
+                        placeholder="YYYY-MM-DD"
                         style={{width:"100%",boxSizing:"border-box",padding:"5px 6px",
                           border:`0.5px solid ${expired?"var(--color-border-danger)":"var(--color-border-secondary)"}`,
                           borderRadius:"var(--border-radius-md)",fontSize:12,
@@ -709,7 +713,7 @@ function StoreView({ profile, lang, setLang }) {
                     </td>
                     <td style={tdBase}>
                       <div style={{display:"flex",alignItems:"center",gap:6}}>
-                        <input type="number" min="1" max="60" value={e.hours} onChange={ev=>editRow(e.id,"hours",ev.target.value)} placeholder="예: 40"
+                        <input type="number" min="1" max="168" value={e.hours} onChange={ev=>editRow(e.id,"hours",ev.target.value)} placeholder="40"
                           style={{flex:1,minWidth:0,padding:"5px 7px",border:"0.5px solid var(--color-border-secondary)",borderRadius:"var(--border-radius-md)",fontSize:12,background:"var(--color-background-primary)",color:"var(--color-text-primary)"}}/>
                         {expired&&<span style={{fontSize:10,color:"var(--color-text-danger)",whiteSpace:"nowrap"}}>{t.expired_tag}</span>}
                       </div>
