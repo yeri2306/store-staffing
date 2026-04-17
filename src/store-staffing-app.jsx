@@ -491,7 +491,11 @@ function StoreView({ profile, lang, setLang }) {
     loadSubs();
   };
 
-  const thStyle = {fontSize:11,fontWeight:500,color:"var(--color-text-secondary)",
+  const storeMatches = (() => {
+    const q = (info.store_name||"").toLowerCase();
+    const stores = STORE_MAP[profile.country]||[];
+    return q ? stores.filter(s=>s.name.toLowerCase().includes(q)||s.code.toLowerCase().includes(q)) : stores;
+  })();
     padding:"7px 8px",textAlign:"left",borderBottom:"0.5px solid var(--color-border-secondary)",
     background:"var(--color-background-secondary)",whiteSpace:"nowrap"};
   const tdBase = {padding:"6px 6px",borderBottom:"0.5px solid var(--color-border-tertiary)"};
@@ -529,28 +533,20 @@ function StoreView({ profile, lang, setLang }) {
               style={{...inputStyle(false),padding:"7px 10px"}}
               autoComplete="off"
             />
-            {searchOpen && (() => {
-              const q = (info.store_name||"").toLowerCase();
-              const stores = STORE_MAP[profile.country]||[];
-              const matches = q
-                ? stores.filter(s=>s.name.toLowerCase().includes(q)||s.code.toLowerCase().includes(q))
-                : stores;
-              if (!matches.length) return null;
-              return (
-                <div style={{position:"absolute",top:"100%",left:0,right:0,zIndex:1000,background:"var(--color-background-primary)",border:"0.5px solid var(--color-border-secondary)",borderRadius:"var(--border-radius-md)",boxShadow:"0 4px 12px rgba(0,0,0,0.12)",marginTop:2,maxHeight:220,overflowY:"auto"}}>
-                  {matches.map(s=>(
-                    <div key={s.code}
-                      onMouseDown={e=>{ e.preventDefault(); si("store_name",s.name); si("store_code",s.code); setSearchOpen(false); }}
-                      style={{padding:"9px 12px",fontSize:13,cursor:"pointer",borderBottom:"0.5px solid var(--color-border-tertiary)",display:"flex",justifyContent:"space-between",alignItems:"center"}}
-                      onMouseEnter={e=>e.currentTarget.style.background="var(--color-background-secondary)"}
-                      onMouseLeave={e=>e.currentTarget.style.background="transparent"}>
-                      <span style={{color:"var(--color-text-primary)"}}>{s.name}</span>
-                      <span style={{fontSize:11,color:"var(--color-text-tertiary)",marginLeft:8,flexShrink:0}}>{s.code}</span>
-                    </div>
-                  ))}
-                </div>
-              );
-            })()}
+            {searchOpen && storeMatches.length > 0 && (
+              <div style={{position:"absolute",top:"100%",left:0,right:0,zIndex:1000,background:"var(--color-background-primary)",border:"0.5px solid var(--color-border-secondary)",borderRadius:"var(--border-radius-md)",boxShadow:"0 4px 12px rgba(0,0,0,0.12)",marginTop:2,maxHeight:220,overflowY:"auto"}}>
+                {storeMatches.map(s=>(
+                  <div key={s.code}
+                    onMouseDown={e=>{ e.preventDefault(); si("store_name",s.name); si("store_code",s.code); setSearchOpen(false); }}
+                    style={{padding:"9px 12px",fontSize:13,cursor:"pointer",borderBottom:"0.5px solid var(--color-border-tertiary)",display:"flex",justifyContent:"space-between",alignItems:"center"}}
+                    onMouseEnter={e=>e.currentTarget.style.background="var(--color-background-secondary)"}
+                    onMouseLeave={e=>e.currentTarget.style.background="transparent"}>
+                    <span style={{color:"var(--color-text-primary)"}}>{s.name}</span>
+                    <span style={{fontSize:11,color:"var(--color-text-tertiary)",marginLeft:8,flexShrink:0}}>{s.code}</span>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
           <div>
             <label style={{fontSize:11,color:"var(--color-text-secondary)",display:"block",marginBottom:4}}>{t.closing_month} *</label>
