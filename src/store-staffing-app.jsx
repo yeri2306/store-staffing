@@ -1,4 +1,3 @@
-import React from 'react';
 import { useState, useEffect, useRef } from "react";
 import { createClient } from "@supabase/supabase-js";
 import * as XLSX from "xlsx";
@@ -8,8 +7,8 @@ import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianG
 // ① supabase.com 에서 프로젝트 생성 후 아래 두 값을 교체하세요
 //    Project Settings → API → Project URL / anon public key
 // ─────────────────────────────────────────────────────────────────────────────
-const SUPABASE_URL      = "https://crmcnjydqsecexogknlz.supabase.co";
-const SUPABASE_ANON_KEY = "sb_publishable_3ZiYHyL4l39Wd5t4aURI2g_rUt3DJ5q";
+const SUPABASE_URL      = "https://YOUR_PROJECT.supabase.co";
+const SUPABASE_ANON_KEY = "YOUR_ANON_KEY";
 const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // ── constants ─────────────────────────────────────────────────────────────────
@@ -278,12 +277,48 @@ function StoreView({ profile }) {
           <p style={{fontSize:12,fontWeight:500,color:"var(--color-text-secondary)",margin:0}}>
             직원별 계약 근로시간 <span style={{fontWeight:400,color:"var(--color-text-tertiary)"}}>· h/주</span>
           </p>
-          <button type="button" onClick={addRow}
-            style={{fontSize:12,padding:"5px 14px",borderRadius:"var(--border-radius-md)",
-              border:"0.5px solid var(--color-border-secondary)",background:"var(--color-background-secondary)",
-              color:"var(--color-text-primary)",cursor:"pointer"}}>
-            + 행 추가
-          </button>
+          <div style={{display:"flex",gap:8}}>
+            <button type="button" onClick={()=>{
+              const cols=["성명","계약형태(FT/PT)","계약시작일(YYYY-MM-DD)","계약종료일(YYYY-MM-DD)","계약근로시간(h/주)"];
+              const sample=[["홍길동","FT","2024-01-01","","40"],["김영희","PT","2023-06-01","2025-06-30","20"]];
+              const ws=XLSX.utils.aoa_to_sheet([cols,...sample]);
+              ws["!cols"]=cols.map(()=>({wch:22}));
+              const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,"직원명부");
+              XLSX.writeFile(wb,"직원명부_업로드_템플릿.xlsx");
+            }} style={{fontSize:11,padding:"5px 12px",borderRadius:"var(--border-radius-md)",border:"0.5px solid var(--color-border-secondary)",background:"var(--color-background-secondary)",color:"var(--color-text-secondary)",cursor:"pointer"}}>
+              템플릿 다운로드
+            </button>
+            <label style={{fontSize:11,padding:"5px 12px",borderRadius:"var(--border-radius-md)",border:"0.5px solid var(--color-border-secondary)",background:"var(--color-background-secondary)",color:"var(--color-text-primary)",cursor:"pointer"}}>
+              엑셀 업로드
+              <input type="file" accept=".xlsx,.xls,.csv" style={{display:"none"}} onChange={ev=>{
+                const file=ev.target.files[0]; if(!file) return;
+                const reader=new FileReader();
+                reader.onload=e=>{
+                  const wb=XLSX.read(e.target.result,{type:"array"});
+                  const ws=wb.Sheets[wb.SheetNames[0]];
+                  const raw=XLSX.utils.sheet_to_json(ws,{header:1,defval:""});
+                  if(raw.length<2) return;
+                  const rows=raw.slice(1).filter(r=>r[0]).map((r,i)=>({
+                    id: Date.now()+i,
+                    name: String(r[0]||"").trim(),
+                    type: String(r[1]||"FT").trim().toUpperCase()==="PT"?"PT":"FT",
+                    contract_start: String(r[2]||"").trim(),
+                    contract_end: String(r[3]||"").trim(),
+                    hours: String(r[4]||"").trim(),
+                  }));
+                  if(rows.length) setEmps(p=>[...p.filter(e=>e.name||num(e.hours)), ...rows]);
+                };
+                reader.readAsArrayBuffer(file);
+                ev.target.value="";
+              }}/>
+            </label>
+            <button type="button" onClick={addRow}
+              style={{fontSize:12,padding:"5px 14px",borderRadius:"var(--border-radius-md)",
+                border:"0.5px solid var(--color-border-secondary)",background:"var(--color-background-secondary)",
+                color:"var(--color-text-primary)",cursor:"pointer"}}>
+              + 행 추가
+            </button>
+          </div>
         </div>
 
         <div style={{overflowX:"auto"}}>
@@ -487,7 +522,7 @@ function HqView({ profile }) {
       </div>
 
       <div style={{borderBottom:"0.5px solid var(--color-border-tertiary)",marginBottom:"1.25rem",display:"flex"}}>
-        {[["dashboard","대시보드"],["upload","SAP 업로드"],["raw","원본 데이터"]].map(([t,l])=>(
+        {[["dashboard","대시보드"],["upload","SAP 업로드"],["raw","원본 데이터"],["users","사용자 관리"]].map(([t,l])=>(
           <button key={t} style={ts(t)} onClick={()=>setTab(t)}>{l}</button>
         ))}
       </div>
@@ -498,8 +533,145 @@ function HqView({ profile }) {
             {tab==="dashboard" && <HqDashboard subs={subs} sapData={sapData} merged={merged}/>}
             {tab==="upload"    && <HqUpload sapData={sapData} onDone={loadAll}/>}
             {tab==="raw"       && <HqRaw merged={merged} subs={subs}/>}
+            {tab==="users"     && <HqUsers/>}
           </>
       }
+    </div>
+  );
+}
+
+// ── HqUsers ───────────────────────────────────────────────────────────────────
+function HqUsers() {
+  const [users,   setUsers]   = useState([]);
+  const [email,   setEmail]   = useState("");
+  const [country, setCountry] = useState("");
+  const [role,    setRole]    = useState("store");
+  const [pw,      setPw]      = useState("");
+  const [busy,    setBusy]    = useState(false);
+  const [msg,     setMsg]     = useState("");
+  const [loading, setLoading] = useState(true);
+
+  const loadUsers = async () => {
+    const {data} = await sb.from("profiles").select("*").order("country");
+    setUsers(data??[]); setLoading(false);
+  };
+  useEffect(()=>{ loadUsers(); },[]);
+
+  const invite = async () => {
+    if (!email||!pw) { setMsg("이메일과 비밀번호를 입력하세요."); return; }
+    if (role==="store"&&!country) { setMsg("국가를 선택하세요."); return; }
+    setBusy(true); setMsg("");
+    // 1. Supabase Admin API로 사용자 생성
+    const {data, error} = await sb.auth.admin.createUser({
+      email, password: pw,
+      email_confirm: true,
+      user_metadata: { role, country: role==="hq"?null:country }
+    });
+    if (error) {
+      // admin API 없으면 일반 signUp 사용
+      const {error:e2} = await sb.auth.signUp({
+        email, password: pw,
+        options:{ data:{ role, country: role==="hq"?null:country } }
+      });
+      if (e2) { setMsg("생성 실패: "+e2.message); setBusy(false); return; }
+    }
+    // 2. profiles 직접 upsert (트리거 실패 대비)
+    await sb.from("profiles").upsert({
+      email, role, country: role==="hq"?null:country
+    }, {onConflict:"email"});
+    setMsg(`✓ ${email} 계정 생성 완료`);
+    setEmail(""); setPw(""); setCountry(""); setRole("store");
+    setBusy(false); loadUsers();
+  };
+
+  const updateRole = async (id, newRole, newCountry) => {
+    await sb.from("profiles").update({role:newRole, country:newCountry||null}).eq("id",id);
+    loadUsers();
+  };
+
+  const ss = (v) => ({padding:"7px 10px",border:"0.5px solid var(--color-border-secondary)",borderRadius:"var(--border-radius-md)",background:"var(--color-background-primary)",color:"var(--color-text-primary)",fontSize:13,width:"100%"});
+
+  return (
+    <div style={{maxWidth:700}}>
+      {/* 신규 계정 생성 */}
+      <div style={{background:"var(--color-background-primary)",border:"0.5px solid var(--color-border-tertiary)",borderRadius:"var(--border-radius-lg)",padding:"1.25rem",marginBottom:"1.5rem"}}>
+        <p style={{fontSize:13,fontWeight:500,color:"var(--color-text-primary)",margin:"0 0 14px"}}>신규 계정 발급</p>
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:10}}>
+          <div>
+            <label style={{fontSize:11,color:"var(--color-text-secondary)",display:"block",marginBottom:4}}>이메일 *</label>
+            <input value={email} onChange={e=>setEmail(e.target.value)} placeholder="name@company.com"
+              style={{...ss(),boxSizing:"border-box"}}/>
+          </div>
+          <div>
+            <label style={{fontSize:11,color:"var(--color-text-secondary)",display:"block",marginBottom:4}}>비밀번호 *</label>
+            <input type="password" value={pw} onChange={e=>setPw(e.target.value)} placeholder="초기 비밀번호"
+              style={{...ss(),boxSizing:"border-box"}}/>
+          </div>
+          <div>
+            <label style={{fontSize:11,color:"var(--color-text-secondary)",display:"block",marginBottom:4}}>역할 *</label>
+            <select value={role} onChange={e=>setRole(e.target.value)} style={ss()}>
+              <option value="store">매장 담당자</option>
+              <option value="hq">HQ (전체 조회)</option>
+            </select>
+          </div>
+          <div>
+            <label style={{fontSize:11,color:"var(--color-text-secondary)",display:"block",marginBottom:4}}>담당 국가 {role==="store"?"*":""}</label>
+            <select value={country} onChange={e=>setCountry(e.target.value)} disabled={role==="hq"} style={{...ss(),opacity:role==="hq"?0.4:1}}>
+              <option value="">{role==="hq"?"전체 (HQ)":"국가 선택"}</option>
+              {COUNTRIES.map(c=><option key={c} value={c}>{c}</option>)}
+            </select>
+          </div>
+        </div>
+        {msg&&<p style={{fontSize:12,color:msg.startsWith("✓")?"var(--color-text-success)":"var(--color-text-danger)",margin:"0 0 10px"}}>{msg}</p>}
+        <button onClick={invite} disabled={busy}
+          style={{width:"100%",padding:"10px",border:"none",borderRadius:"var(--border-radius-md)",background:busy?"var(--color-border-secondary)":"var(--color-text-primary)",color:"var(--color-background-primary)",fontSize:13,fontWeight:500,cursor:busy?"default":"pointer"}}>
+          {busy?"생성 중...":"계정 생성"}
+        </button>
+        <p style={{fontSize:11,color:"var(--color-text-tertiary)",margin:"8px 0 0"}}>
+          생성 후 해당 이메일로 비밀번호를 별도 공유하세요. 첫 로그인 후 비밀번호 변경을 권장합니다.
+        </p>
+      </div>
+
+      {/* 기존 사용자 목록 */}
+      <p style={{fontSize:12,fontWeight:500,color:"var(--color-text-secondary)",marginBottom:10}}>등록된 사용자 ({users.length}명)</p>
+      {loading ? <p style={{fontSize:13,color:"var(--color-text-secondary)"}}>로딩 중...</p> : (
+        <div style={{border:"0.5px solid var(--color-border-tertiary)",borderRadius:"var(--border-radius-lg)",overflow:"hidden"}}>
+          <table style={{width:"100%",borderCollapse:"collapse"}}>
+            <thead>
+              <tr style={{background:"var(--color-background-secondary)"}}>
+                {["이메일","역할","담당 국가","변경"].map(h=>(
+                  <th key={h} style={{fontSize:11,fontWeight:500,color:"var(--color-text-secondary)",padding:"7px 12px",textAlign:"left",borderBottom:"0.5px solid var(--color-border-secondary)"}}>{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {users.map(u=>(
+                <tr key={u.id}>
+                  <td style={{padding:"9px 12px",fontSize:12,borderBottom:"0.5px solid var(--color-border-tertiary)",color:"var(--color-text-primary)"}}>{u.email}</td>
+                  <td style={{padding:"9px 12px",fontSize:12,borderBottom:"0.5px solid var(--color-border-tertiary)"}}>
+                    <span style={{padding:"2px 8px",borderRadius:99,fontSize:11,fontWeight:600,
+                      background:u.role==="hq"?"#E6F1FB":"#E1F5EE",
+                      color:u.role==="hq"?"#0C447C":"#085041"}}>
+                      {u.role==="hq"?"HQ":"매장"}
+                    </span>
+                  </td>
+                  <td style={{padding:"9px 12px",fontSize:12,borderBottom:"0.5px solid var(--color-border-tertiary)",color:"var(--color-text-secondary)"}}>{u.country||"전체"}</td>
+                  <td style={{padding:"9px 12px",borderBottom:"0.5px solid var(--color-border-tertiary)"}}>
+                    <select defaultValue={u.country||""} onChange={e=>{
+                      const val=e.target.value;
+                      if(val==="hq") updateRole(u.id,"hq",null);
+                      else updateRole(u.id,"store",val);
+                    }} style={{padding:"4px 8px",border:"0.5px solid var(--color-border-secondary)",borderRadius:"var(--border-radius-md)",fontSize:11,background:"var(--color-background-primary)",color:"var(--color-text-primary)"}}>
+                      <option value="hq">HQ (전체)</option>
+                      {COUNTRIES.map(c=><option key={c} value={c}>{c}</option>)}
+                    </select>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 }
