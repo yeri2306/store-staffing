@@ -7,8 +7,8 @@ import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianG
 // ① supabase.com 에서 프로젝트 생성 후 아래 두 값을 교체하세요
 //    Project Settings → API → Project URL / anon public key
 // ─────────────────────────────────────────────────────────────────────────────
-const SUPABASE_URL      = "https://crmcnjydqsecexogknlz.supabase.co";
-const SUPABASE_ANON_KEY = "sb_publishable_3ZiYHyL4l39Wd5t4aURI2g_rUt3DJ5q";
+const SUPABASE_URL      = "https://YOUR_PROJECT.supabase.co";
+const SUPABASE_ANON_KEY = "YOUR_ANON_KEY";
 const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // ── Custom font injection ─────────────────────────────────────────────────────
@@ -23,16 +23,24 @@ const GM_FONT_B64 = "T1RUTwAMAIAAAwBAQ0ZGIOtA2A8AABFkAABrv0dERUYGdAZwAAB9JAAAAFJ
 
 
 // ── constants ─────────────────────────────────────────────────────────────────
-const COUNTRIES = ["KR","US","JP","CN","EU","AU","SG"];
+const COUNTRIES = ["AE","AU","CA","CN","FR","GB","HK","IT","JP","MY","PH","SG","TH","TW","US"];
 const STANDARD_HOURS = 40;
 const STORE_MAP = {
-  KR:["GM_서울 루쿠스노바에 서울","GM_서울 무쿠스노바에 북점","GM_서울 F1시(A)","GM_서울 DS 글리파","GM_서울 MALL 신세계스퀘어","GM_경기 DS 글리파리아","GM_경기 DS 탑"],
-  US:["GM_NY Fifth Ave","GM_LA Beverly Hills","GM_Chicago Mag Mile","GM_Miami Brickell"],
-  JP:["GM_Tokyo Ginza","GM_Osaka Shinsaibashi","GM_Shibuya"],
-  CN:["GM_Shanghai Nanjing","GM_Beijing Sanlitun","GM_Chengdu IFS"],
-  EU:["GM_Paris Champs-Élysées","GM_Milan Montenapoleone","GM_London Bond St"],
-  AU:["GM_Sydney Pitt St","GM_Melbourne Collins St"],
-  SG:["GM_Singapore Orchard","GM_Singapore Marina Bay"],
+  AE:[{code:"AE1001",name:"GM_Dubai_MALL_TDM"},{code:"AE1005",name:"GM_WH_UAE"}],
+  AU:[{code:"AU1001",name:"GM_Sydney_DFS_AirportT1"},{code:"AU1002",name:"GM_Sydney_MALL_DJ"},{code:"AU1004",name:"GM_Melbourne_MALL_Chadstone"}],
+  CA:[{code:"CA1001",name:"GM_Toronto_MALL_Yorkdale"},{code:"CA1002",name:"GM_WH_CANADA"}],
+  CN:[{code:"CN1003",name:"GM_Beijing_MALL_SKP-S"},{code:"CN1027",name:"GM_Beijing_MALL_Taikooli"},{code:"C032",name:"GM_Changsha_MALL_IFS"},{code:"CN1029",name:"GM_Chengdu_MALL_SKP"},{code:"CN1007",name:"GM_Chengdu_MALL_Taikooli"},{code:"CN1036",name:"GM_Chongqing_MALL_MixC"},{code:"CN1030",name:"GM_Guangzhou_MALL_PC"},{code:"CN1001",name:"GM_Guangzhou_MALL_Taikoohui"},{code:"C035",name:"GM_Hangzhou_MALL_MixC"},{code:"CN1008",name:"GM_Hangzhou_MALL_Tower"},{code:"CN1011",name:"GM_Nanjing_MALL_Deji"},{code:"CN1012",name:"GM_Ningbo_DS_Hankyu"},{code:"CN1035",name:"GM_Sanya_MALL_CDF"},{code:"CN1004",name:"GM_Shanghai_HAUS NOWHERE"},{code:"CN1005",name:"GM_Shanghai_MALL_IFC"},{code:"CN1024",name:"GM_Shanghai_MALL_Taikooli"},{code:"C039",name:"GM_Shanghai_MALL_Xintiandi"},{code:"CN1009",name:"GM_Shenyang_MALL_MixC"},{code:"C036",name:"GM_Shenzhen_HAUS NOWHERE"},{code:"CN1019",name:"GM_WH_China"},{code:"CN1017",name:"GM_WS_PUYI CN"},{code:"CN1031",name:"GM_Xiamen_MALL_MixC"},{code:"CN1006",name:"GM_Xian_DS_SKP"}],
+  FR:[{code:"FR1001",name:"GM_Paris_FS_Marais"}],
+  GB:[{code:"GB1001",name:"GM_London_DS_Selfridges"},{code:"GB1003",name:"GM_London_SS_DSM"}],
+  HK:[{code:"HK1001",name:"GM_HongKong_MALL_LG"},{code:"HK1003",name:"GM_WS_PUYI HK"},{code:"HK1004",name:"GM_HongKong_MALL_HC"},{code:"HK1005",name:"GM_WH_HongKong"}],
+  IT:[{code:"IT1001",name:"GM_Milan_DS_10CC"}],
+  JP:[{code:"JP1001",name:"GM_Osaka_DS_Hankyu"},{code:"JP1003",name:"GM_OFFICE_Japan"},{code:"JP1004",name:"GM_Tokyo_FS_Aoyama"},{code:"JP1005",name:"GM_WH_Japan_Maersk"},{code:"JP1007",name:"GM_Tokyo_FS_Ginza"}],
+  MY:[{code:"MY1001",name:"GM_KualaLumpur_MALL_TRX"}],
+  PH:[{code:"PH1001",name:"GM_Manila_MALL_Shangri-La"}],
+  SG:[{code:"SG1001",name:"GM_Singapore_MALL_ION"},{code:"SG1002",name:"GM_Singapore_MALL_MBS"}],
+  TH:[{code:"TH1001",name:"GM_Bangkok_MALL_EmQuartier"},{code:"TH1004",name:"GM_Bangkok_MALL_SPG"},{code:"TH1005",name:"GM_Bangkok_HAUS NOWHERE"}],
+  TW:[{code:"TW1001",name:"GM_Taipei_MALL_Breeze_NanShan"},{code:"TW1003",name:"GM_WH_Taiwan"},{code:"TW1004",name:"GM_Taichung_MALL_Hanshin_IC"}],
+  US:[{code:"US1001",name:"GM_LosAngeles_FS_Downtown"},{code:"US1002",name:"GM_NewYork_FS_Soho"},{code:"US1003",name:"GM_SanJose_MALL_Westfield_VF"},{code:"US1006",name:"GM_WH_USA"},{code:"US1007",name:"GM_CostaMesa_MALL_SCP"},{code:"US1008",name:"GM_NewJersey_MALL_AD"},{code:"US1009",name:"GM_Houston_MALL_Galleria"},{code:"US1010",name:"GM_NewYork_SS_DSM"},{code:"US1011",name:"GM_LosAngeles_SS_DSM"},{code:"US1013",name:"GM_LasVegas_MALL_TFS"},{code:"US1015",name:"GM_OFFICE_USA"},{code:"US1016",name:"GM_PS_USA"},{code:"US1017",name:"GM_RX_USA"},{code:"US1018",name:"GM_LOST_USA"}],
 };
 const MONTHS = Array.from({length:12},(_,i)=>`2025-${String(i+1).padStart(2,"0")}`);
 
@@ -86,7 +94,219 @@ const calcSummary = (rows=[], month="") => {
   };
 };
 
-// ── shared styles ─────────────────────────────────────────────────────────────
+// ── i18n ─────────────────────────────────────────────────────────────────────
+const getLang = () => {
+  const l = (navigator.language || "en").toLowerCase();
+  if (l.startsWith("ko")) return "ko";
+  if (l.startsWith("ja")) return "ja";
+  if (l.startsWith("zh")) return "zh";
+  return "en";
+};
+
+const T = {
+  en: {
+    title_sub: "GLOBAL STORE FTE",
+    login_hint: "If you don't have an invited account, please contact your HQ administrator.",
+    email: "E-mail", password: "Password", login_btn: "LOG IN",
+    login_fail: "Login failed: ", login_loading: "Signing in...",
+    no_profile: "Profile not configured. Please contact your HQ administrator.",
+    logout: "Log out",
+    page_title: "Monthly Headcount Input",
+    page_desc: "Please update and submit any headcount changes as of the monthly closing date.\nEven if there are no changes, please review and submit.",
+    basic_info: "Basic Information",
+    store: "Store", store_ph: "Search store name or code...",
+    closing_month: "Closing Month", select: "Select",
+    submitter: "Submitted by", submitter_ph: "Your name",
+    emp_section: "Employee Contract Hours · h/week",
+    template_dl: "Download Template", excel_ul: "Upload Excel", add_row: "+ Add Row",
+    col_name: "Full Name", col_type: "Type", col_start: "Contract Start", col_end: "Contract End", col_hours: "Contract Hours (h/wk)",
+    expired_tag: "Expired",
+    summary_title: "Auto Summary", summary_sub: "Active employees as of closing month",
+    ft_count: "FT", pt_count: "PT", total: "Total", ft_avg: "FT Avg h", pt_avg: "PT Avg h",
+    expired_msg: (n) => `${n} employee(s) excluded — contract ended before closing month`,
+    fte_label: "FTE", fte_sub: (h,s) => `Total ${h}h ÷ ${s}h`,
+    err_basic: "Please fill in all required fields.",
+    err_emp: "Please enter at least one employee's hours.",
+    err_save: "Save failed: ",
+    submit_btn: "Submit", submit_ok: "✓ Submitted", submit_loading: "Saving...",
+    history_title: (c,n) => `${c} Submission History (${n})`,
+    hq_title: "HQ Dashboard", hq_sub: (s,d) => `${s} submissions · ${d} SAP rows`,
+    refresh: "↻ Refresh",
+    tab_dashboard: "Dashboard", tab_upload: "SAP Upload", tab_raw: "Data", tab_users: "Users",
+    loading: "Loading...", no_data: "No data yet.",
+    invite_title: "Create New Account",
+    inv_email: "Email *", inv_pw: "Password *", inv_role: "Role *", inv_country: "Country",
+    role_store: "Store Manager", role_hq: "HQ (Full Access)",
+    inv_btn: "Create Account", inv_loading: "Creating...",
+    inv_hint: "Share the password separately after creation.",
+    inv_err_fields: "Please enter email and password.",
+    inv_err_country: "Please select a country.",
+    users_list: (n) => `Registered Users (${n})`,
+    col_email: "Email", col_role: "Role", col_country_h: "Country", col_change: "Change",
+    hq_badge: "HQ", store_badge: "Store",
+    sap_desc: "Upload SAP Excel — auto-mapped by store code. Duplicate uploads will overwrite.",
+    sap_dl: "Download Template", sap_ul_btn: (n) => `Import ${n} rows to Supabase`,
+    sap_uploading: "Uploading...", sap_current: (n) => `Current SAP data: ${n} rows`,
+    sap_reset: "Reset All", col_map: "Column Mapping",
+    preview: (n) => `Preview (${n} rows detected)`,
+    map_none: "— No mapping",
+    filter_all_c: "All Countries", filter_all_m: "All Months",
+    dl_excel: "Download Excel",
+    closed_badge: "Expired (excluded)",
+  },
+  ko: {
+    title_sub: "GLOBAL STORE FTE",
+    login_hint: "초대받은 이메일 계정이 없으면 HQ 관리자에게 계정 발급을 요청하세요.",
+    email: "이메일", password: "비밀번호", login_btn: "로그인",
+    login_fail: "로그인 실패: ", login_loading: "로그인 중...",
+    no_profile: "프로필이 설정되지 않았습니다. HQ 관리자에게 문의하세요.",
+    logout: "로그아웃",
+    page_title: "월 마감 인력 입력",
+    page_desc: "매월 마감일 기준 인력 변동 사항을 반영하여 제출해 주세요.\n변동이 없는 경우에도 내용을 확인한 후 반드시 제출해 주시기 바랍니다.",
+    basic_info: "기본 정보",
+    store: "매장", store_ph: "매장명 또는 코드 검색...",
+    closing_month: "마감 월", select: "선택",
+    submitter: "제출자", submitter_ph: "이름",
+    emp_section: "직원별 계약 근로시간 · h/주",
+    template_dl: "템플릿 다운로드", excel_ul: "엑셀 업로드", add_row: "+ 행 추가",
+    col_name: "성명", col_type: "구분", col_start: "계약 시작일", col_end: "계약 종료일", col_hours: "계약 근로시간 (h/주)",
+    expired_tag: "만료",
+    summary_title: "자동 요약", summary_sub: "마감월 기준 재직자만 집계",
+    ft_count: "FT 인원", pt_count: "PT 인원", total: "총 인원", ft_avg: "FT 평균", pt_avg: "PT 평균",
+    expired_msg: (n) => `계약 만료 ${n}명 — 마감월 이전 종료, 집계 제외`,
+    fte_label: "FTE 환산", fte_sub: (h,s) => `총 ${h}h ÷ ${s}h`,
+    err_basic: "기본 정보를 모두 입력해주세요.",
+    err_emp: "근로시간을 최소 1행 입력해주세요.",
+    err_save: "저장 실패: ",
+    submit_btn: "제출하기", submit_ok: "✓ 저장되었습니다", submit_loading: "저장 중...",
+    history_title: (c,n) => `${c} 제출 이력 (${n}건)`,
+    hq_title: "HQ 대시보드", hq_sub: (s,d) => `인력 제출 ${s}건 · SAP ${d}행`,
+    refresh: "↻ 새로고침",
+    tab_dashboard: "대시보드", tab_upload: "SAP 업로드", tab_raw: "원본 데이터", tab_users: "사용자 관리",
+    loading: "로딩 중...", no_data: "아직 수집된 데이터가 없습니다.",
+    invite_title: "신규 계정 발급",
+    inv_email: "이메일 *", inv_pw: "비밀번호 *", inv_role: "역할 *", inv_country: "담당 국가",
+    role_store: "매장 담당자", role_hq: "HQ (전체 조회)",
+    inv_btn: "계정 생성", inv_loading: "생성 중...",
+    inv_hint: "생성 후 해당 이메일로 비밀번호를 별도 공유하세요.",
+    inv_err_fields: "이메일과 비밀번호를 입력하세요.",
+    inv_err_country: "국가를 선택하세요.",
+    users_list: (n) => `등록된 사용자 (${n}명)`,
+    col_email: "이메일", col_role: "역할", col_country_h: "담당 국가", col_change: "변경",
+    hq_badge: "HQ", store_badge: "매장",
+    sap_desc: "SAP 엑셀을 업로드하면 매장코드 기준으로 자동 매핑됩니다. 중복 업로드 시 덮어씁니다.",
+    sap_dl: "템플릿 다운로드", sap_ul_btn: (n) => `${n}행 Supabase에 저장`,
+    sap_uploading: "업로드 중...", sap_current: (n) => `현재 SAP 데이터: ${n}행`,
+    sap_reset: "전체 초기화", col_map: "컬럼 매핑",
+    preview: (n) => `미리보기 (${n}행 인식됨)`,
+    map_none: "— 매핑 안 함",
+    filter_all_c: "전체 국가", filter_all_m: "전체 월",
+    dl_excel: "엑셀 다운로드",
+    closed_badge: "계약만료(제외)",
+  },
+  ja: {
+    title_sub: "GLOBAL STORE FTE",
+    login_hint: "招待されたメールアカウントがない場合は、HQ管理者にアカウント発行をご依頼ください。",
+    email: "メールアドレス", password: "パスワード", login_btn: "ログイン",
+    login_fail: "ログイン失敗: ", login_loading: "ログイン中...",
+    no_profile: "プロフィールが未設定です。HQ管理者にお問い合わせください。",
+    logout: "ログアウト",
+    page_title: "月次人員入力",
+    page_desc: "月次締め日基準で人員変動を反映してご提出ください。\n変動がない場合も、内容を確認の上、必ずご提出ください。",
+    basic_info: "基本情報",
+    store: "店舗", store_ph: "店舗名またはコードで検索...",
+    closing_month: "締め月", select: "選択",
+    submitter: "提出者", submitter_ph: "お名前",
+    emp_section: "従業員別契約労働時間 · h/週",
+    template_dl: "テンプレートDL", excel_ul: "Excelアップロード", add_row: "+ 行追加",
+    col_name: "氏名", col_type: "区分", col_start: "契約開始日", col_end: "契約終了日", col_hours: "契約労働時間 (h/週)",
+    expired_tag: "満了",
+    summary_title: "自動集計", summary_sub: "締め月基準の在籍者のみ",
+    ft_count: "FT人数", pt_count: "PT人数", total: "合計", ft_avg: "FT平均h", pt_avg: "PT平均h",
+    expired_msg: (n) => `契約満了${n}名 — 締め月以前に終了、集計除外`,
+    fte_label: "FTE換算", fte_sub: (h,s) => `合計${h}h ÷ ${s}h`,
+    err_basic: "基本情報をすべて入力してください。",
+    err_emp: "最低1行の労働時間を入力してください。",
+    err_save: "保存失敗: ",
+    submit_btn: "提出する", submit_ok: "✓ 保存しました", submit_loading: "保存中...",
+    history_title: (c,n) => `${c} 提出履歴 (${n}件)`,
+    hq_title: "HQダッシュボード", hq_sub: (s,d) => `人員提出 ${s}件 · SAP ${d}行`,
+    refresh: "↻ 更新",
+    tab_dashboard: "ダッシュボード", tab_upload: "SAPアップロード", tab_raw: "データ", tab_users: "ユーザー管理",
+    loading: "読み込み中...", no_data: "データがありません。",
+    invite_title: "新規アカウント発行",
+    inv_email: "メール *", inv_pw: "パスワード *", inv_role: "役割 *", inv_country: "担当国",
+    role_store: "店舗担当者", role_hq: "HQ（全体閲覧）",
+    inv_btn: "アカウント作成", inv_loading: "作成中...",
+    inv_hint: "作成後、パスワードを別途共有してください。",
+    inv_err_fields: "メールとパスワードを入力してください。",
+    inv_err_country: "国を選択してください。",
+    users_list: (n) => `登録ユーザー (${n}名)`,
+    col_email: "メール", col_role: "役割", col_country_h: "担当国", col_change: "変更",
+    hq_badge: "HQ", store_badge: "店舗",
+    sap_desc: "SAP ExcelをアップロードするとストアコードでAuto Mappingされます。",
+    sap_dl: "テンプレートDL", sap_ul_btn: (n) => `${n}行をSupabaseに保存`,
+    sap_uploading: "アップロード中...", sap_current: (n) => `現在のSAPデータ: ${n}行`,
+    sap_reset: "全初期化", col_map: "カラムマッピング",
+    preview: (n) => `プレビュー (${n}行認識)`,
+    map_none: "— マッピングなし",
+    filter_all_c: "全国", filter_all_m: "全月",
+    dl_excel: "Excelダウンロード",
+    closed_badge: "契約満了(除外)",
+  },
+  zh: {
+    title_sub: "GLOBAL STORE FTE",
+    login_hint: "如果没有受邀的邮箱账号，请向HQ管理员申请账号。",
+    email: "邮箱", password: "密码", login_btn: "登录",
+    login_fail: "登录失败: ", login_loading: "登录中...",
+    no_profile: "未配置用户信息，请联系HQ管理员。",
+    logout: "退出登录",
+    page_title: "月度人员录入",
+    page_desc: "请根据月度截止日期更新并提交人员变动情况。\n即使无变动，也请确认内容后提交。",
+    basic_info: "基本信息",
+    store: "门店", store_ph: "搜索门店名称或代码...",
+    closing_month: "截止月份", select: "请选择",
+    submitter: "提交人", submitter_ph: "姓名",
+    emp_section: "员工合同工时 · h/周",
+    template_dl: "下载模板", excel_ul: "上传Excel", add_row: "+ 添加行",
+    col_name: "姓名", col_type: "类型", col_start: "合同开始日", col_end: "合同结束日", col_hours: "合同工时 (h/周)",
+    expired_tag: "已到期",
+    summary_title: "自动汇总", summary_sub: "仅统计截止月在职员工",
+    ft_count: "全职人数", pt_count: "兼职人数", total: "总人数", ft_avg: "全职均h", pt_avg: "兼职均h",
+    expired_msg: (n) => `${n}名员工已排除 — 合同在截止月前结束`,
+    fte_label: "FTE换算", fte_sub: (h,s) => `总计${h}h ÷ ${s}h`,
+    err_basic: "请填写所有必填项。",
+    err_emp: "请至少输入一行工时。",
+    err_save: "保存失败: ",
+    submit_btn: "提交", submit_ok: "✓ 已保存", submit_loading: "保存中...",
+    history_title: (c,n) => `${c} 提交记录 (${n}条)`,
+    hq_title: "HQ 总览", hq_sub: (s,d) => `人员提交 ${s}条 · SAP ${d}行`,
+    refresh: "↻ 刷新",
+    tab_dashboard: "概览", tab_upload: "SAP上传", tab_raw: "原始数据", tab_users: "用户管理",
+    loading: "加载中...", no_data: "暂无数据。",
+    invite_title: "创建新账号",
+    inv_email: "邮箱 *", inv_pw: "密码 *", inv_role: "角色 *", inv_country: "负责国家",
+    role_store: "门店负责人", role_hq: "HQ（全局访问）",
+    inv_btn: "创建账号", inv_loading: "创建中...",
+    inv_hint: "创建后请单独告知密码。",
+    inv_err_fields: "请输入邮箱和密码。",
+    inv_err_country: "请选择国家。",
+    users_list: (n) => `已注册用户 (${n}人)`,
+    col_email: "邮箱", col_role: "角色", col_country_h: "负责国家", col_change: "修改",
+    hq_badge: "HQ", store_badge: "门店",
+    sap_desc: "上传SAP Excel，将按门店代码自动映射。重复上传将覆盖。",
+    sap_dl: "下载模板", sap_ul_btn: (n) => `将${n}行导入Supabase`,
+    sap_uploading: "上传中...", sap_current: (n) => `当前SAP数据: ${n}行`,
+    sap_reset: "全部重置", col_map: "列映射",
+    preview: (n) => `预览 (识别${n}行)`,
+    map_none: "— 不映射",
+    filter_all_c: "全部国家", filter_all_m: "全部月份",
+    dl_excel: "下载Excel",
+    closed_badge: "合同已到期(已排除)",
+  },
+};
+
+const useT = () => T[getLang()] || T.en;
 const inputStyle = (err) => ({
   width:"100%", boxSizing:"border-box", padding:"8px 11px",
   border:`0.5px solid ${err?"var(--color-border-danger)":"var(--color-border-secondary)"}`,
@@ -133,7 +353,7 @@ export default function App() {
 
   if (session === undefined) return (
     <div style={{display:"flex",alignItems:"center",justifyContent:"center",height:"60vh"}}>
-      <p style={{fontSize:13,color:"var(--color-text-secondary)"}}>로딩 중...</p>
+      <p style={{fontSize:13,color:"var(--color-text-secondary)"}}>{(T[getLang()]||T.en).loading}</p>
     </div>
   );
   if (!session) return <LoginScreen />;
@@ -142,82 +362,58 @@ export default function App() {
   return <StoreView profile={profile} />;
 }
 
-const getLocalizedHint = () => {
-  const lang = (navigator.language || "en").toLowerCase();
-  if (lang.startsWith("ko")) return "초대받은 이메일 계정이 없으면 HQ 관리자에게 계정 발급을 요청하세요.";
-  if (lang.startsWith("ja")) return "招待されたメールアカウントがない場合は、HQ管理者にアカウント発行をご依頼ください。";
-  if (lang.startsWith("zh")) return "如果没有受邀的邮箱账号，请向HQ管理员申请账号。";
-  if (lang.startsWith("fr")) return "Si vous n'avez pas de compte invité, veuillez contacter votre administrateur HQ.";
-  if (lang.startsWith("de")) return "Wenn Sie kein eingeladenes Konto haben, wenden Sie sich bitte an Ihren HQ-Administrator.";
-  return "If you don't have an invited account, please contact your HQ administrator.";
-};
+const getLocalizedHint = () => (T[getLang()]||T.en).login_hint;
 function LoginScreen() {
+  const t = useT();
   const [email, setEmail] = useState("");
   const [pw,    setPw]    = useState("");
   const [err,   setErr]   = useState("");
   const [busy,  setBusy]  = useState(false);
 
   const login = async () => {
-    if (!email || !pw) { setErr("이메일과 비밀번호를 입력하세요."); return; }
+    if (!email || !pw) { setErr(t.err_basic); return; }
     setBusy(true); setErr("");
     const {error} = await sb.auth.signInWithPassword({email, password:pw});
-    if (error) { setErr("로그인 실패: " + error.message); setBusy(false); }
+    if (error) { setErr(t.login_fail + error.message); setBusy(false); }
   };
 
-  const fieldStyle = {
-    display:"grid", gridTemplateColumns:"120px 1fr",
-    alignItems:"center", borderBottom:"0.5px solid var(--color-border-tertiary)",
-    padding:"14px 0",
-  };
+  const fieldStyle = { display:"grid", gridTemplateColumns:"120px 1fr", alignItems:"center", borderBottom:"0.5px solid var(--color-border-tertiary)", padding:"14px 0" };
   const labelStyle = {fontSize:14,color:"var(--color-text-primary)",fontWeight:400};
-  const inpStyle = {
-    border:"none", outline:"none", fontSize:14, background:"transparent",
-    color:"var(--color-text-primary)", width:"100%",
-  };
+  const inpStyle   = {border:"none",outline:"none",fontSize:14,background:"transparent",color:"var(--color-text-primary)",width:"100%"};
 
   return (
     <div style={{minHeight:"100vh",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"flex-start",paddingTop:"12vh",padding:"12vh 1rem 2rem"}}>
-      {/* 타이틀 */}
-      <div style={{textAlign:"center",marginBottom:"5rem"}}>
+      <div style={{textAlign:"center",marginBottom:"4rem"}}>
         <p style={{fontFamily:"'GMSerif', serif",fontSize:52,fontWeight:400,margin:"0 0 14px",color:"var(--color-text-primary)",letterSpacing:"0.04em",lineHeight:1}}>IICOMBINED</p>
-        <p style={{fontSize:13,fontWeight:400,margin:0,color:"var(--color-text-primary)",letterSpacing:"0.2em"}}>GLOBAL STORE FTE</p>
+        <p style={{fontSize:13,fontWeight:400,margin:0,color:"var(--color-text-primary)",letterSpacing:"0.2em"}}>{t.title_sub}</p>
       </div>
-
-      {/* 폼 */}
       <div style={{width:"100%",maxWidth:420}}>
         <div style={fieldStyle}>
-          <span style={labelStyle}>E-mail</span>
-          <input value={email} onChange={e=>setEmail(e.target.value)} onKeyDown={e=>e.key==="Enter"&&login()}
-            type="email" placeholder="name@company.com" style={inpStyle}/>
+          <span style={labelStyle}>{t.email}</span>
+          <input value={email} onChange={e=>setEmail(e.target.value)} onKeyDown={e=>e.key==="Enter"&&login()} type="email" placeholder="name@company.com" style={inpStyle}/>
         </div>
         <div style={fieldStyle}>
-          <span style={labelStyle}>Password</span>
-          <input value={pw} onChange={e=>setPw(e.target.value)} onKeyDown={e=>e.key==="Enter"&&login()}
-            type="password" placeholder="••••••••" style={inpStyle}/>
+          <span style={labelStyle}>{t.password}</span>
+          <input value={pw} onChange={e=>setPw(e.target.value)} onKeyDown={e=>e.key==="Enter"&&login()} type="password" placeholder="••••••••" style={inpStyle}/>
         </div>
-
-        {err && <p style={{fontSize:12,color:"var(--color-text-danger)",margin:"12px 0 0",textAlign:"center"}}>{err}</p>}
-
+        {err&&<p style={{fontSize:12,color:"var(--color-text-danger)",margin:"12px 0 0",textAlign:"center"}}>{err}</p>}
         <div style={{textAlign:"center",marginTop:"3rem"}}>
-          <button onClick={login} disabled={busy}
-            style={{border:"none",background:"none",fontSize:14,fontWeight:400,letterSpacing:"0.15em",cursor:busy?"default":"pointer",color:"var(--color-text-primary)",padding:"8px 0"}}>
-            {busy ? "..." : "LOG IN"}
+          <button onClick={login} disabled={busy} style={{border:"none",background:"none",fontSize:14,fontWeight:400,letterSpacing:"0.15em",cursor:busy?"default":"pointer",color:"var(--color-text-primary)",padding:"8px 0"}}>
+            {busy?"...":t.login_btn}
           </button>
         </div>
-
-        <p style={{fontSize:12,color:"var(--color-text-tertiary)",textAlign:"center",margin:"2rem 0 0",letterSpacing:"0.02em"}}>
-          {getLocalizedHint()}
-        </p>
+        <p style={{fontSize:12,color:"var(--color-text-tertiary)",textAlign:"center",margin:"2rem 0 0",letterSpacing:"0.02em"}}>{t.login_hint}</p>
       </div>
     </div>
   );
 }
 
 function NoProfileScreen() {
+  const t = useT();
   return (
     <div style={{display:"flex",alignItems:"center",justifyContent:"center",height:"60vh",flexDirection:"column",gap:12}}>
-      <p style={{fontSize:14,color:"var(--color-text-secondary)"}}>프로필이 설정되지 않았습니다. HQ 관리자에게 문의하세요.</p>
-      <button onClick={()=>sb.auth.signOut()} style={{fontSize:13,color:"var(--color-text-secondary)",background:"none",border:"none",cursor:"pointer"}}>로그아웃</button>
+      <p style={{fontSize:14,color:"var(--color-text-secondary)"}}>{t.no_profile}</p>
+      <button onClick={()=>sb.auth.signOut()} style={{fontSize:13,color:"var(--color-text-secondary)",background:"none",border:"none",cursor:"pointer"}}>{t.logout}</button>
     </div>
   );
 }
@@ -226,6 +422,7 @@ function NoProfileScreen() {
 // StoreView
 // ══════════════════════════════════════════════════════════════════════════════
 function StoreView({ profile }) {
+  const t = useT();
   const blank = () => ({store_code:"", store_name:"", month:"", submitter:""});
   const [info,  setInfo]  = useState(blank());
   const [emps,  setEmps]  = useState([{id:1,name:"",type:"FT",contract_start:"",contract_end:"",hours:""}]);
@@ -253,7 +450,7 @@ function StoreView({ profile }) {
     if (!info.store_name||!info.month||!info.submitter) { setErr("기본 정보를 모두 입력해주세요."); return; }
     if (!emps.some(e=>num(e.hours)>0)) { setErr("근로시간을 최소 1행 입력해주세요."); return; }
     setErr(""); setBusy(true);
-    const sc = info.store_code || info.store_name.replace(/\s+/g,"_").toUpperCase();
+    const sc = info.store_code || (STORE_MAP[profile.country]||[]).find(s=>s.name===info.store_name)?.code || info.store_name;
     const {error} = await sb.from("submissions").insert({
       store_code: sc, store_name: info.store_name,
       country: profile.country, month: info.month,
@@ -274,41 +471,69 @@ function StoreView({ profile }) {
 
   return (
     <div style={{maxWidth:760,margin:"0 auto",padding:"1.5rem 1rem"}}>
-      <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:"1.25rem"}}>
-        <div>
-          <p style={{fontSize:16,fontWeight:500,margin:0,color:"var(--color-text-primary)"}}>
-            {profile.country} · 월 마감 인력 입력
-          </p>
-          <p style={{fontSize:12,color:"var(--color-text-secondary)",margin:"3px 0 0"}}>
-            {profile.email} · 직원별 계약 근로시간을 행으로 입력하면 FTE가 자동 계산됩니다
-          </p>
-        </div>
-        <button onClick={()=>sb.auth.signOut()} style={{fontSize:12,color:"var(--color-text-tertiary)",background:"none",border:"none",cursor:"pointer"}}>로그아웃</button>
+      {/* 상단 우측: 이메일 + 로그아웃 */}
+      <div style={{display:"flex",justifyContent:"flex-end",alignItems:"center",gap:16,marginBottom:"2rem"}}>
+        <span style={{fontSize:12,color:"var(--color-text-secondary)"}}>{profile.email}</span>
+        <button onClick={()=>sb.auth.signOut()}
+          style={{fontSize:12,color:"var(--color-text-tertiary)",background:"none",border:"0.5px solid var(--color-border-tertiary)",borderRadius:"var(--border-radius-md)",padding:"4px 12px",cursor:"pointer"}}>
+          {t.logout}
+        </button>
+      </div>
+      <div style={{marginBottom:"1.5rem"}}>
+        <p style={{fontSize:20,fontWeight:500,margin:"0 0 8px",color:"var(--color-text-primary)"}}>{t.page_title}</p>
+        <p style={{fontSize:13,color:"var(--color-text-secondary)",margin:0,lineHeight:1.7,maxWidth:580}}>
+          {t.page_desc.split("\n").map((l,i)=><React.Fragment key={i}>{l}{i===0&&<br/>}</React.Fragment>)}
+        </p>
       </div>
 
       {/* 기본 정보 */}
       <div style={{...cardStyle, marginBottom:10}}>
-        <p style={{fontSize:12,fontWeight:500,color:"var(--color-text-secondary)",margin:"0 0 12px"}}>기본 정보</p>
+        <p style={{fontSize:12,fontWeight:500,color:"var(--color-text-secondary)",margin:"0 0 12px"}}>{t.basic_info}</p>
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:10}}>
-          <div>
-            <label style={{fontSize:11,color:"var(--color-text-secondary)",display:"block",marginBottom:4}}>매장 *</label>
-            <select value={info.store_name} onChange={e=>{const n=e.target.value; si("store_name",n); si("store_code",n.replace(/\s+/g,"_").toUpperCase());}}
-              style={{...inputStyle(false),padding:"7px 10px"}}>
-              <option value="">선택</option>
-              {(STORE_MAP[profile.country]||[]).map(s=><option key={s} value={s}>{s}</option>)}
-            </select>
+          <div style={{position:"relative"}}>
+            <label style={{fontSize:11,color:"var(--color-text-secondary)",display:"block",marginBottom:4}}>{t.store} *</label>
+            <input
+              value={info.store_name}
+              onChange={e=>{ si("store_name",e.target.value); si("store_code",""); }}
+              onFocus={()=>si("_search_open",true)}
+              onBlur={()=>setTimeout(()=>si("_search_open",false),150)}
+              placeholder={t.store_ph}
+              style={{...inputStyle(false),padding:"7px 10px"}}
+              autoComplete="off"
+            />
+            {info._search_open && (() => {
+              const q = (info.store_name||"").toLowerCase();
+              const stores = STORE_MAP[profile.country]||[];
+              const matches = q
+                ? stores.filter(s=>s.name.toLowerCase().includes(q)||s.code.toLowerCase().includes(q))
+                : stores;
+              if (!matches.length) return null;
+              return (
+                <div style={{position:"absolute",top:"100%",left:0,right:0,zIndex:100,background:"var(--color-background-primary)",border:"0.5px solid var(--color-border-secondary)",borderRadius:"var(--border-radius-md)",boxShadow:"0 4px 12px rgba(0,0,0,0.08)",marginTop:2,maxHeight:220,overflowY:"auto"}}>
+                  {matches.map(s=>(
+                    <div key={s.code} onMouseDown={()=>{ si("store_name",s.name); si("store_code",s.code); si("_search_open",false); }}
+                      style={{padding:"9px 12px",fontSize:13,cursor:"pointer",borderBottom:"0.5px solid var(--color-border-tertiary)",display:"flex",justifyContent:"space-between",alignItems:"center"}}
+                      onMouseEnter={e=>e.currentTarget.style.background="var(--color-background-secondary)"}
+                      onMouseLeave={e=>e.currentTarget.style.background="transparent"}>
+                      <span style={{color:"var(--color-text-primary)"}}>{s.name}</span>
+                      <span style={{fontSize:11,color:"var(--color-text-tertiary)",marginLeft:8,flexShrink:0}}>{s.code}</span>
+                    </div>
+                  ))}
+                </div>
+              );
+            })()}
           </div>
           <div>
-            <label style={{fontSize:11,color:"var(--color-text-secondary)",display:"block",marginBottom:4}}>마감 월 *</label>
+            <label style={{fontSize:11,color:"var(--color-text-secondary)",display:"block",marginBottom:4}}>{t.closing_month} *</label>
             <select value={info.month} onChange={e=>si("month",e.target.value)} style={{...inputStyle(false),padding:"7px 10px"}}>
-              <option value="">선택</option>
+              <option value="">{t.select}</option>
               {MONTHS.map(m=><option key={m} value={m}>{m}</option>)}
             </select>
           </div>
         </div>
         <div>
-          <label style={{fontSize:11,color:"var(--color-text-secondary)",display:"block",marginBottom:4}}>제출자 *</label>
-          <input value={info.submitter} onChange={e=>si("submitter",e.target.value)} placeholder="이름" style={inputStyle(false)}/>
+          <label style={{fontSize:11,color:"var(--color-text-secondary)",display:"block",marginBottom:4}}>{t.submitter} *</label>
+          <input value={info.submitter} onChange={e=>si("submitter",e.target.value)} placeholder={t.submitter_ph} style={inputStyle(false)}/>
         </div>
       </div>
 
@@ -316,38 +541,79 @@ function StoreView({ profile }) {
       <div style={{...cardStyle, marginBottom:10}}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
           <p style={{fontSize:12,fontWeight:500,color:"var(--color-text-secondary)",margin:0}}>
-            직원별 계약 근로시간 <span style={{fontWeight:400,color:"var(--color-text-tertiary)"}}>· h/주</span>
+            {t.emp_section}
           </p>
           <div style={{display:"flex",gap:8}}>
             <button type="button" onClick={()=>{
-              const cols=["성명","계약형태(FT/PT)","계약시작일(YYYY-MM-DD)","계약종료일(YYYY-MM-DD)","계약근로시간(h/주)"];
-              const sample=[["홍길동","FT","2024-01-01","","40"],["김영희","PT","2023-06-01","2025-06-30","20"]];
+              const stores = STORE_MAP[profile.country]||[];
+              const cols=["매장코드","매장명","성명","계약형태(FT/PT)","계약시작일(YYYY-MM-DD)","계약종료일(YYYY-MM-DD)","계약근로시간(h/주)"];
+              const sample = stores.flatMap(s=>[
+                [s.code, s.name, "Hong Gil-dong", "FT", "2024-01-01", "", "40"],
+                [s.code, s.name, "Kim Young-hee", "PT", "2023-06-01", "2025-12-31", "20"],
+              ]);
               const ws=XLSX.utils.aoa_to_sheet([cols,...sample]);
-              ws["!cols"]=cols.map(()=>({wch:22}));
+              ws["!cols"]=cols.map(()=>({wch:26}));
               const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,"직원명부");
-              XLSX.writeFile(wb,"직원명부_업로드_템플릿.xlsx");
+              XLSX.writeFile(wb,`Employee_Roster_${profile.country}_Template.xlsx`);
             }} style={{fontSize:11,padding:"5px 12px",borderRadius:"var(--border-radius-md)",border:"0.5px solid var(--color-border-secondary)",background:"var(--color-background-secondary)",color:"var(--color-text-secondary)",cursor:"pointer"}}>
               템플릿 다운로드
             </button>
             <label style={{fontSize:11,padding:"5px 12px",borderRadius:"var(--border-radius-md)",border:"0.5px solid var(--color-border-secondary)",background:"var(--color-background-secondary)",color:"var(--color-text-primary)",cursor:"pointer"}}>
               엑셀 업로드
-              <input type="file" accept=".xlsx,.xls,.csv" style={{display:"none"}} onChange={ev=>{
+              <input type="file" accept=".xlsx,.xls,.csv" style={{display:"none"}} onChange={async ev=>{
                 const file=ev.target.files[0]; if(!file) return;
                 const reader=new FileReader();
-                reader.onload=e=>{
+                reader.onload=async e=>{
                   const wb=XLSX.read(e.target.result,{type:"array"});
                   const ws=wb.Sheets[wb.SheetNames[0]];
                   const raw=XLSX.utils.sheet_to_json(ws,{header:1,defval:""});
                   if(raw.length<2) return;
-                  const rows=raw.slice(1).filter(r=>r[0]).map((r,i)=>({
-                    id: Date.now()+i,
-                    name: String(r[0]||"").trim(),
-                    type: String(r[1]||"FT").trim().toUpperCase()==="PT"?"PT":"FT",
-                    contract_start: String(r[2]||"").trim(),
-                    contract_end: String(r[3]||"").trim(),
-                    hours: String(r[4]||"").trim(),
-                  }));
-                  if(rows.length) setEmps(p=>[...p.filter(e=>e.name||num(e.hours)), ...rows]);
+                  const hdrs=raw[0].map(h=>String(h).trim());
+                  const hasStoreCol = hdrs[0].includes("매장코드")||hdrs[0].includes("code");
+                  const month = info.month;
+                  const submitter = info.submitter;
+
+                  if(hasStoreCol) {
+                    if(!month||!submitter){ alert("마감 월과 제출자를 먼저 입력해주세요."); return; }
+                    const rows = raw.slice(1).filter(r=>r[0]||r[2]);
+                    const byStore = {};
+                    rows.forEach((r,i)=>{
+                      const sc = String(r[0]||"").trim();
+                      const sname = String(r[1]||"").trim() || sc;
+                      if(!sc) return;
+                      if(!byStore[sc]) byStore[sc]={store_code:sc, store_name:sname, emps:[]};
+                      if(r[2]) byStore[sc].emps.push({
+                        id:Date.now()+i,
+                        name:String(r[2]||"").trim(),
+                        type:String(r[3]||"FT").trim().toUpperCase()==="PT"?"PT":"FT",
+                        contract_start:String(r[4]||"").trim(),
+                        contract_end:String(r[5]||"").trim(),
+                        hours:String(r[6]||"").trim(),
+                      });
+                    });
+                    setBusy(true);
+                    for(const [sc, data] of Object.entries(byStore)) {
+                      await sb.from("submissions").insert({
+                        store_code:sc, store_name:data.store_name,
+                        country:profile.country, month, submitter,
+                        employees:data.emps,
+                      });
+                    }
+                    setBusy(false);
+                    setSaved(true); setTimeout(()=>setSaved(false),3000);
+                    alert(`✓ ${Object.keys(byStore).length}개 매장 일괄 제출 완료`);
+                    loadSubs();
+                  } else {
+                    const rows=raw.slice(1).filter(r=>r[0]).map((r,i)=>({
+                      id:Date.now()+i,
+                      name:String(r[0]||"").trim(),
+                      type:String(r[1]||"FT").trim().toUpperCase()==="PT"?"PT":"FT",
+                      contract_start:String(r[2]||"").trim(),
+                      contract_end:String(r[3]||"").trim(),
+                      hours:String(r[4]||"").trim(),
+                    }));
+                    if(rows.length) setEmps(p=>[...p.filter(e=>e.name||num(e.hours)),...rows]);
+                  }
                 };
                 reader.readAsArrayBuffer(file);
                 ev.target.value="";
