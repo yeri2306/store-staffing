@@ -156,27 +156,50 @@ function LoginScreen() {
     if (error) { setErr("로그인 실패: " + error.message); setBusy(false); }
   };
 
+  const fieldStyle = {
+    display:"grid", gridTemplateColumns:"120px 1fr",
+    alignItems:"center", borderBottom:"0.5px solid var(--color-border-tertiary)",
+    padding:"14px 0",
+  };
+  const labelStyle = {fontSize:14,color:"var(--color-text-primary)",fontWeight:400};
+  const inpStyle = {
+    border:"none", outline:"none", fontSize:14, background:"transparent",
+    color:"var(--color-text-primary)", width:"100%",
+  };
+
   return (
-    <div style={{maxWidth:380,margin:"80px auto",padding:"0 1rem"}}>
-      <div style={cardStyle}>
-        <p style={{fontFamily:"'GMSerif', serif",fontSize:22,fontWeight:400,margin:"0 0 4px",color:"var(--color-text-primary)",letterSpacing:"0.02em"}}>IIC Global Store FTE</p>
-        <p style={{fontSize:12,color:"var(--color-text-secondary)",margin:"0 0 1.5rem"}}>관리자가 발급한 계정으로 로그인하세요</p>
-        <div style={{marginBottom:10}}>
-          <label style={{fontSize:11,color:"var(--color-text-secondary)",display:"block",marginBottom:4}}>이메일</label>
+    <div style={{minHeight:"100vh",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"2rem 1rem"}}>
+      {/* 타이틀 */}
+      <div style={{textAlign:"center",marginBottom:"4rem"}}>
+        <p style={{fontFamily:"'GMSerif', serif",fontSize:52,fontWeight:400,margin:"0 0 8px",color:"var(--color-text-primary)",letterSpacing:"0.04em",lineHeight:1}}>IIC</p>
+        <p style={{fontFamily:"'GMSerif', serif",fontSize:52,fontWeight:400,margin:"0 0 14px",color:"var(--color-text-primary)",letterSpacing:"0.04em",lineHeight:1}}>COMBINED</p>
+        <p style={{fontSize:13,fontWeight:400,margin:0,color:"var(--color-text-primary)",letterSpacing:"0.2em"}}>GLOBAL STORE FTE</p>
+      </div>
+
+      {/* 폼 */}
+      <div style={{width:"100%",maxWidth:420}}>
+        <div style={fieldStyle}>
+          <span style={labelStyle}>E-mail</span>
           <input value={email} onChange={e=>setEmail(e.target.value)} onKeyDown={e=>e.key==="Enter"&&login()}
-            type="email" placeholder="name@company.com" style={inputStyle(false)}/>
+            type="email" placeholder="name@company.com" style={inpStyle}/>
         </div>
-        <div style={{marginBottom:16}}>
-          <label style={{fontSize:11,color:"var(--color-text-secondary)",display:"block",marginBottom:4}}>비밀번호</label>
+        <div style={fieldStyle}>
+          <span style={labelStyle}>Password</span>
           <input value={pw} onChange={e=>setPw(e.target.value)} onKeyDown={e=>e.key==="Enter"&&login()}
-            type="password" placeholder="••••••••" style={inputStyle(false)}/>
+            type="password" placeholder="••••••••" style={inpStyle}/>
         </div>
-        {err && <p style={{fontSize:12,color:"var(--color-text-danger)",margin:"0 0 10px"}}>{err}</p>}
-        <button onClick={login} disabled={busy} style={btnPrimary(busy)}>
-          {busy ? "로그인 중..." : "로그인"}
-        </button>
-        <p style={{fontSize:11,color:"var(--color-text-tertiary)",textAlign:"center",margin:"12px 0 0"}}>
-          계정이 없으면 HQ 관리자에게 계정 발급을 요청하세요
+
+        {err && <p style={{fontSize:12,color:"var(--color-text-danger)",margin:"12px 0 0",textAlign:"center"}}>{err}</p>}
+
+        <div style={{textAlign:"center",marginTop:"3rem"}}>
+          <button onClick={login} disabled={busy}
+            style={{border:"none",background:"none",fontSize:14,fontWeight:400,letterSpacing:"0.15em",cursor:busy?"default":"pointer",color:"var(--color-text-primary)",padding:"8px 0"}}>
+            {busy ? "..." : "LOG IN"}
+          </button>
+        </div>
+
+        <p style={{fontSize:12,color:"var(--color-text-tertiary)",textAlign:"center",margin:"2rem 0 0",letterSpacing:"0.02em"}}>
+          초대받은 이메일 계정이 없으면 HQ 관리자에게 계정 발급을 요청하세요.
         </p>
       </div>
     </div>
