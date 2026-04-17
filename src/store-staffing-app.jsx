@@ -8,7 +8,7 @@ import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianG
 //    Project Settings → API → Project URL / anon public key
 // ─────────────────────────────────────────────────────────────────────────────
 const SUPABASE_URL      = "https://YOUR_PROJECT.supabase.co";
-const SUPABASE_ANON_KEY = "YOUR_ANON_KEY";
+const SUPABASE_ANON_KEY = "sb_publishable_3ZiYHyL4l39Wd5t4aURI2g_rUt3DJ5q";
 const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // ── Custom font injection ─────────────────────────────────────────────────────
