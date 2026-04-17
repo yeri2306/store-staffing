@@ -142,7 +142,15 @@ export default function App() {
   return <StoreView profile={profile} />;
 }
 
-// ── LoginScreen ───────────────────────────────────────────────────────────────
+const getLocalizedHint = () => {
+  const lang = (navigator.language || "en").toLowerCase();
+  if (lang.startsWith("ko")) return "초대받은 이메일 계정이 없으면 HQ 관리자에게 계정 발급을 요청하세요.";
+  if (lang.startsWith("ja")) return "招待されたメールアカウントがない場合は、HQ管理者にアカウント発行をご依頼ください。";
+  if (lang.startsWith("zh")) return "如果没有受邀的邮箱账号，请向HQ管理员申请账号。";
+  if (lang.startsWith("fr")) return "Si vous n'avez pas de compte invité, veuillez contacter votre administrateur HQ.";
+  if (lang.startsWith("de")) return "Wenn Sie kein eingeladenes Konto haben, wenden Sie sich bitte an Ihren HQ-Administrator.";
+  return "If you don't have an invited account, please contact your HQ administrator.";
+};
 function LoginScreen() {
   const [email, setEmail] = useState("");
   const [pw,    setPw]    = useState("");
@@ -168,11 +176,10 @@ function LoginScreen() {
   };
 
   return (
-    <div style={{minHeight:"100vh",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"2rem 1rem"}}>
+    <div style={{minHeight:"100vh",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"flex-start",paddingTop:"12vh",padding:"12vh 1rem 2rem"}}>
       {/* 타이틀 */}
-      <div style={{textAlign:"center",marginBottom:"4rem"}}>
-        <p style={{fontFamily:"'GMSerif', serif",fontSize:52,fontWeight:400,margin:"0 0 8px",color:"var(--color-text-primary)",letterSpacing:"0.04em",lineHeight:1}}>IIC</p>
-        <p style={{fontFamily:"'GMSerif', serif",fontSize:52,fontWeight:400,margin:"0 0 14px",color:"var(--color-text-primary)",letterSpacing:"0.04em",lineHeight:1}}>COMBINED</p>
+      <div style={{textAlign:"center",marginBottom:"5rem"}}>
+        <p style={{fontFamily:"'GMSerif', serif",fontSize:52,fontWeight:400,margin:"0 0 14px",color:"var(--color-text-primary)",letterSpacing:"0.04em",lineHeight:1}}>IICOMBINED</p>
         <p style={{fontSize:13,fontWeight:400,margin:0,color:"var(--color-text-primary)",letterSpacing:"0.2em"}}>GLOBAL STORE FTE</p>
       </div>
 
@@ -199,7 +206,7 @@ function LoginScreen() {
         </div>
 
         <p style={{fontSize:12,color:"var(--color-text-tertiary)",textAlign:"center",margin:"2rem 0 0",letterSpacing:"0.02em"}}>
-          초대받은 이메일 계정이 없으면 HQ 관리자에게 계정 발급을 요청하세요.
+          {getLocalizedHint()}
         </p>
       </div>
     </div>
