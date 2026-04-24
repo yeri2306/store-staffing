@@ -137,6 +137,7 @@ const T = {
     invite_title: "Create New Account",
     inv_email: "Email *", inv_pw: "Password *", inv_role: "Role *", inv_country: "Country",
     role_store: "Store Manager", role_hq: "HQ (Full Access)",
+    role_hr: "HR", role_cr: "CR Manager",
     inv_btn: "Create Account", inv_loading: "Creating...",
     inv_hint: "Share the password separately after creation.",
     inv_err_fields: "Please enter email and password.",
@@ -186,7 +187,8 @@ const T = {
     loading: "로딩 중...", no_data: "아직 수집된 데이터가 없습니다.",
     invite_title: "신규 계정 발급",
     inv_email: "이메일 *", inv_pw: "비밀번호 *", inv_role: "역할 *", inv_country: "담당 국가",
-    role_store: "매장 담당자", role_hq: "HQ (전체 조회)",
+    role_store: "스토어 매니저", role_hq: "HQ (전체 조회)",
+    role_hr: "HR", role_cr: "CR 매니저",
     inv_btn: "계정 생성", inv_loading: "생성 중...",
     inv_hint: "생성 후 해당 이메일로 비밀번호를 별도 공유하세요.",
     inv_err_fields: "이메일과 비밀번호를 입력하세요.",
@@ -236,7 +238,8 @@ const T = {
     loading: "読み込み中...", no_data: "データがありません。",
     invite_title: "新規アカウント発行",
     inv_email: "メール *", inv_pw: "パスワード *", inv_role: "役割 *", inv_country: "担当国",
-    role_store: "店舗担当者", role_hq: "HQ（全体閲覧）",
+    role_store: "ストアマネージャー", role_hq: "HQ（全体閲覧）",
+    role_hr: "HR", role_cr: "CRマネージャー",
     inv_btn: "アカウント作成", inv_loading: "作成中...",
     inv_hint: "作成後、パスワードを別途共有してください。",
     inv_err_fields: "メールとパスワードを入力してください。",
@@ -286,7 +289,8 @@ const T = {
     loading: "加载中...", no_data: "暂无数据。",
     invite_title: "创建新账号",
     inv_email: "邮箱 *", inv_pw: "密码 *", inv_role: "角色 *", inv_country: "负责国家",
-    role_store: "门店负责人", role_hq: "HQ（全局访问）",
+    role_store: "店长", role_hq: "HQ（全局访问）",
+    role_hr: "HR", role_cr: "CR经理",
     inv_btn: "创建账号", inv_loading: "创建中...",
     inv_hint: "创建后请单独告知密码。",
     inv_err_fields: "请输入邮箱和密码。",
@@ -890,7 +894,7 @@ function HqUsers({ lang }) {
   const [users,   setUsers]   = useState([]);
   const [email,   setEmail]   = useState("");
   const [country, setCountry] = useState("");
-  const [role,    setRole]    = useState("store");
+  const [role,    setRole]    = useState("hr");
   const [pw,      setPw]      = useState("");
   const [busy,    setBusy]    = useState(false);
   const [msg,     setMsg]     = useState("");
@@ -904,7 +908,7 @@ function HqUsers({ lang }) {
 
   const invite = async () => {
     if (!email||!pw) { setMsg("이메일과 비밀번호를 입력하세요."); return; }
-    if (role==="store"&&!country) { setMsg("국가를 선택하세요."); return; }
+    if (role!=="hq"&&!country) { setMsg("국가를 선택하세요."); return; }
     setBusy(true); setMsg("");
     // 1. Supabase Admin API로 사용자 생성
     const {data, error} = await sb.auth.admin.createUser({
@@ -955,12 +959,14 @@ function HqUsers({ lang }) {
           <div>
             <label style={{fontSize:11,color:"var(--color-text-secondary)",display:"block",marginBottom:4}}>{t.inv_role}</label>
             <select value={role} onChange={e=>setRole(e.target.value)} style={ss()}>
-              <option value="store">{t.role_store}</option>
               <option value="hq">{t.role_hq}</option>
+              <option value="hr">{t.role_hr}</option>
+              <option value="store_manager">{t.role_store}</option>
+              <option value="cr_manager">{t.role_cr}</option>
             </select>
           </div>
           <div>
-            <label style={{fontSize:11,color:"var(--color-text-secondary)",display:"block",marginBottom:4}}>{t.inv_country}{role==="store"?" *":""}</label>
+            <label style={{fontSize:11,color:"var(--color-text-secondary)",display:"block",marginBottom:4}}>{t.inv_country}{role!=="hq"?" *":""}</label>
             <select value={country} onChange={e=>setCountry(e.target.value)} disabled={role==="hq"} style={{...ss(),opacity:role==="hq"?0.4:1}}>
               <option value="">{role==="hq"?t.role_hq:t.select}</option>
               {COUNTRIES.map(c=><option key={c} value={c}>{c}</option>)}
@@ -992,17 +998,17 @@ function HqUsers({ lang }) {
                   <td style={{padding:"9px 12px",fontSize:12,borderBottom:"0.5px solid var(--color-border-tertiary)",color:"var(--color-text-primary)"}}>{u.email}</td>
                   <td style={{padding:"9px 12px",fontSize:12,borderBottom:"0.5px solid var(--color-border-tertiary)"}}>
                     <span style={{padding:"2px 8px",borderRadius:99,fontSize:11,fontWeight:600,
-                      background:u.role==="hq"?"#E6F1FB":"#E1F5EE",
-                      color:u.role==="hq"?"#0C447C":"#085041"}}>
-                      {u.role==="hq"?t.hq_badge:t.store_badge}
+                      background:u.role==="hq"?"#E6F1FB":u.role==="hr"?"#E1F5EE":u.role==="store_manager"?"#FFF0E6":"#F0E6FF",
+                      color:u.role==="hq"?"#0C447C":u.role==="hr"?"#085041":u.role==="store_manager"?"#7B3B00":"#4B0082"}}>
+                      {u.role==="hq"?t.hq_badge:u.role==="hr"?t.role_hr:u.role==="store_manager"?t.role_store:t.role_cr}
                     </span>
                   </td>
                   <td style={{padding:"9px 12px",fontSize:12,borderBottom:"0.5px solid var(--color-border-tertiary)",color:"var(--color-text-secondary)"}}>{u.country||t.role_hq}</td>
                   <td style={{padding:"9px 12px",borderBottom:"0.5px solid var(--color-border-tertiary)"}}>
                     <select defaultValue={u.country||""} onChange={e=>{
                       const val=e.target.value;
-                      if(val==="hq") updateRole(u.id,"hq",null);
-                      else updateRole(u.id,"store",val);
+                      const newRole = val==="hq"?"hq": u.role==="hq"?"hr":u.role;
+                      updateRole(u.id, val==="hq"?"hq":newRole, val==="hq"?null:val);
                     }} style={{padding:"4px 8px",border:"0.5px solid var(--color-border-secondary)",borderRadius:"var(--border-radius-md)",fontSize:11,background:"var(--color-background-primary)",color:"var(--color-text-primary)"}}>
                       <option value="hq">{t.role_hq}</option>
                       {COUNTRIES.map(c=><option key={c} value={c}>{c}</option>)}
