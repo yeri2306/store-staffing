@@ -453,10 +453,10 @@ function NoProfileScreen({ lang, setLang }) {
 
 function StoreView({ profile, lang, setLang, isHqMode=false, onSubmitDone }) {
   const t = useT(lang);
-  const blank = () => ({store_code:"", store_name:"", month:"", submitter:"", brand:"GM"});
+  const blank = () => ({store_code:"", store_name:"", month:"", submitter:""});
   const [info,       setInfo]      = useState(blank());
   const [inputFocus, setInputFocus] = useState(false);
-  const [emps,  setEmps]  = useState([{id:1,name:"",type:"FT",job_title:"",contract_start:"",contract_end:"",hours:""}]);
+  const [emps,  setEmps]  = useState([{id:1,name:"",type:"FT",brand:"GM",contract_start:"",contract_end:"",hours:""}]);
   const [subs,  setSubs]  = useState([]);
   const [saved, setSaved] = useState(false);
   const [err,   setErr]   = useState("");
@@ -472,7 +472,7 @@ function StoreView({ profile, lang, setLang, isHqMode=false, onSubmitDone }) {
   };
 
   const si = (k,v) => setInfo(p=>({...p,[k]:v}));
-  const addRow = () => setEmps(p=>[...p,{id:Date.now(),name:"",type:"FT",contract_start:"",contract_end:"",hours:""}]);
+  const addRow = () => setEmps(p=>[...p,{id:Date.now(),name:"",type:"FT",brand:"GM",contract_start:"",contract_end:"",hours:""}]);
   const delRow = id => setEmps(p=>p.filter(e=>e.id!==id));
   const editRow = (id,k,v) => setEmps(p=>p.map(e=>e.id===id?{...e,[k]:v}:e));
   const summary = calcSummary(emps, info.month);
@@ -485,7 +485,7 @@ function StoreView({ profile, lang, setLang, isHqMode=false, onSubmitDone }) {
     const {error} = await sb.from("submissions").insert({
       store_code: sc, store_name: info.store_name,
       country: profile.country, month: info.month,
-      brand: info.brand || "GM",
+      brand: emps[0]?.brand || "GM",
       submitter: info.submitter, employees: emps,
     });
     setBusy(false);
@@ -509,7 +509,13 @@ function StoreView({ profile, lang, setLang, isHqMode=false, onSubmitDone }) {
   const isExactMatch = allStores.some(s=>s.name===info.store_name);
   const showDropdown = inputFocus && storeMatches.length > 0 && !isExactMatch;
 
-  const thStyle = {fontSize:11,fontWeight:500,color:"var(--color-text-secondary)",
+  // 매장코드 → 국가 자동 매핑 헬퍼
+  const getCountryByStoreCode = (code) => {
+    for (const [country, stores] of Object.entries(STORE_MAP)) {
+      if (stores.some(s=>s.code===code)) return country;
+    }
+    return profile.country || "";
+  };
     padding:"7px 8px",textAlign:"left",borderBottom:"0.5px solid var(--color-border-secondary)",
     background:"var(--color-background-secondary)",whiteSpace:"nowrap"};
   const tdBase = {padding:"6px 6px",borderBottom:"0.5px solid var(--color-border-tertiary)"};
@@ -535,27 +541,7 @@ function StoreView({ profile, lang, setLang, isHqMode=false, onSubmitDone }) {
       {/* 기본 정보 */}
       <div style={{...cardStyle, marginBottom:10}}>
         <p style={{fontSize:12,fontWeight:500,color:"var(--color-text-secondary)",margin:"0 0 12px"}}>{t.basic_info}</p>
-        <div style={{display:"grid",gridTemplateColumns:"120px 1fr 1fr",gap:10,marginBottom:10}}>
-          {/* Brand 선택 */}
-          <div>
-            <label style={{fontSize:11,color:"var(--color-text-secondary)",display:"block",marginBottom:4}}>Brand *</label>
-            <div style={{display:"flex",gap:8}}>
-              {["GM","TAM"].map(b=>{
-                const active = info.brand === b;
-                return (
-                  <button key={b} type="button" onClick={()=>si("brand",b)}
-                    style={{flex:1,padding:"8px 0",fontSize:13,fontWeight:600,cursor:"pointer",
-                      borderRadius:"var(--border-radius-md)",
-                      border:active?"1.5px solid #1F3864":"0.5px solid #ccc",
-                      background:active?"#1F3864":"transparent",
-                      color:active?"#ffffff":"#999",
-                      transition:"all .15s"}}>
-                    {b}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:10}}>
           <div style={{position:"relative"}}>
             <label style={{fontSize:11,color:"var(--color-text-secondary)",display:"block",marginBottom:4}}>{t.store} *</label>
             <input
@@ -642,11 +628,13 @@ function StoreView({ profile, lang, setLang, isHqMode=false, onSubmitDone }) {
                       const sc = String(r[1]||"").trim();
                       const sname = String(r[2]||"").trim() || sc;
                       if(!sc) return;
-                      if(!byStore[sc]) byStore[sc]={store_code:sc, store_name:sname, brand, emps:[]};
+                      const autoCountry = getCountryByStoreCode(sc);
+                      if(!byStore[sc]) byStore[sc]={store_code:sc, store_name:sname, brand, country:autoCountry, emps:[]};
                       if(r[3]) byStore[sc].emps.push({
                         id:Date.now()+i,
                         name:String(r[3]||"").trim(),
                         type:String(r[4]||"FT").trim().toUpperCase()==="PT"?"PT":"FT",
+                        brand: String(r[0]||"GM").trim(),
                         contract_start:String(r[5]||"").trim(),
                         contract_end:String(r[6]||"").trim(),
                         hours:String(r[7]||"").trim(),
@@ -656,7 +644,7 @@ function StoreView({ profile, lang, setLang, isHqMode=false, onSubmitDone }) {
                     for(const [sc, data] of Object.entries(byStore)) {
                       await sb.from("submissions").insert({
                         store_code:sc, store_name:data.store_name,
-                        country:profile.country, month, submitter,
+                        country: data.country || profile.country, month, submitter,
                         brand: data.brand || "GM",
                         employees:data.emps,
                       });
@@ -693,12 +681,12 @@ function StoreView({ profile, lang, setLang, isHqMode=false, onSubmitDone }) {
         <div style={{overflowX:"auto"}}>
           <table style={{width:"100%",borderCollapse:"collapse",tableLayout:"fixed",minWidth:560}}>
             <colgroup>
-              <col style={{width:28}}/><col style={{width:"18%"}}/><col style={{width:80}}/>
-              <col style={{width:"17%"}}/><col style={{width:"17%"}}/><col/><col style={{width:28}}/>
+              <col style={{width:28}}/><col style={{width:"14%"}}/><col style={{width:80}}/>
+              <col style={{width:80}}/><col style={{width:"14%"}}/><col style={{width:"14%"}}/><col/><col style={{width:28}}/>
             </colgroup>
             <thead>
               <tr>
-                {["#",t.col_name,t.col_type,t.col_start,t.col_end,t.col_hours,""].map((h,i)=>(
+                {["#",t.col_name,"Brand",t.col_type,t.col_start,t.col_end,t.col_hours,""].map((h,i)=>(
                   <th key={i} style={thStyle}>{h}</th>
                 ))}
               </tr>
@@ -712,6 +700,23 @@ function StoreView({ profile, lang, setLang, isHqMode=false, onSubmitDone }) {
                     <td style={tdBase}>
                       <input value={e.name} onChange={ev=>editRow(e.id,"name",ev.target.value)} placeholder={lang==="ko"?"홍길동":lang==="ja"?"山田太郎":lang==="zh"?"张三":"Full Name"}
                         style={{width:"100%",boxSizing:"border-box",padding:"5px 7px",border:"0.5px solid var(--color-border-secondary)",borderRadius:"var(--border-radius-md)",fontSize:12,background:"var(--color-background-primary)",color:"var(--color-text-primary)"}}/>
+                    </td>
+                    <td style={tdBase}>
+                      <div style={{display:"flex",gap:3}}>
+                        {["GM","TAM"].map(b=>{
+                          const active = e.brand===b;
+                          return (
+                            <button key={b} type="button" onClick={()=>editRow(e.id,"brand",b)}
+                              style={{flex:1,padding:"4px 0",fontSize:10,fontWeight:700,cursor:"pointer",
+                                borderRadius:"var(--border-radius-md)",
+                                border:active?"1.5px solid #1F3864":"0.5px solid #ccc",
+                                background:active?"#1F3864":"transparent",
+                                color:active?"#fff":"#aaa"}}>
+                              {b}
+                            </button>
+                          );
+                        })}
+                      </div>
                     </td>
                     <td style={tdBase}>
                       <div style={{display:"flex",gap:4}}>
@@ -894,7 +899,7 @@ function HqView({ profile, lang, setLang }) {
       </div>
 
       <div style={{borderBottom:"0.5px solid var(--color-border-tertiary)",marginBottom:"1.25rem",display:"flex"}}>
-        {[["dashboard",tl.tab_dashboard],["input",tl.tab_input||"Data Input"],["upload",tl.tab_upload],["raw",tl.tab_raw],["users",tl.tab_users]].map(([tv,l])=>(
+        {[["dashboard",tl.tab_dashboard],["upload",tl.tab_upload],["raw",tl.tab_raw],["users",tl.tab_users]].map(([tv,l])=>(
           <button key={tv} style={ts(tv)} onClick={()=>setTab(tv)}>{l}</button>
         ))}
       </div>
@@ -903,7 +908,6 @@ function HqView({ profile, lang, setLang }) {
         ? <p style={{fontSize:13,color:"var(--color-text-secondary)",textAlign:"center",padding:"2rem"}}>{tl.loading}</p>
         : <>
             {tab==="dashboard" && <HqDashboard subs={subs} sapData={sapData} merged={merged} lang={lang}/>}
-            {tab==="input"     && <HqInputSelector profile={profile} lang={lang} onDone={loadAll}/>}
             {tab==="upload"    && <HqUpload sapData={sapData} onDone={loadAll} lang={lang}/>}
             {tab==="raw"       && <HqRaw merged={merged} subs={subs} lang={lang}/>}
             {tab==="users"     && <HqUsers lang={lang}/>}
