@@ -901,7 +901,7 @@ function HqView({ profile, lang, setLang }) {
       </div>
 
       <div style={{borderBottom:"0.5px solid var(--color-border-tertiary)",marginBottom:"1.25rem",display:"flex"}}>
-        {[["dashboard",tl.tab_dashboard],["upload",tl.tab_upload],["raw",tl.tab_raw],["users",tl.tab_users]].map(([tv,l])=>(
+        {[["dashboard",tl.tab_dashboard],["input",tl.tab_input||"Data Input"],["upload",tl.tab_upload],["raw",tl.tab_raw],["users",tl.tab_users]].map(([tv,l])=>(
           <button key={tv} style={ts(tv)} onClick={()=>setTab(tv)}>{l}</button>
         ))}
       </div>
@@ -910,6 +910,7 @@ function HqView({ profile, lang, setLang }) {
         ? <p style={{fontSize:13,color:"var(--color-text-secondary)",textAlign:"center",padding:"2rem"}}>{tl.loading}</p>
         : <>
             {tab==="dashboard" && <HqDashboard subs={subs} sapData={sapData} merged={merged} lang={lang}/>}
+            {tab==="input"     && <HqInputSelector profile={profile} lang={lang} setLang={setLang} onDone={loadAll}/>}
             {tab==="upload"    && <HqUpload sapData={sapData} onDone={loadAll} lang={lang}/>}
             {tab==="raw"       && <HqRaw merged={merged} subs={subs} lang={lang}/>}
             {tab==="users"     && <HqUsers lang={lang}/>}
@@ -1047,7 +1048,7 @@ function HqUsers({ lang }) {
 
 // ── HqInputSelector ───────────────────────────────────────────────────────────
 // HQ가 국가를 선택해서 해당 국가 매장에 직접 입력할 수 있는 래퍼
-function HqInputSelector({ profile, lang, onDone }) {
+function HqInputSelector({ profile, lang, setLang, onDone }) {
   const t = useT(lang);
   const [selectedCountry, setSelectedCountry] = useState("");
 
@@ -1082,7 +1083,7 @@ function HqInputSelector({ profile, lang, onDone }) {
         style={{fontSize:12,color:"var(--color-text-secondary)",background:"none",border:"none",cursor:"pointer",marginBottom:16}}>
         ← 국가 재선택
       </button>
-      <StoreView profile={fakeProfile} lang={lang} setLang={()=>{}} isHqMode={true} onSubmitDone={onDone}/>
+      <StoreView profile={fakeProfile} lang={lang} setLang={setLang} isHqMode={true} onSubmitDone={onDone}/>
     </div>
   );
 }
