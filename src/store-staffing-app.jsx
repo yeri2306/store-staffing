@@ -907,29 +907,19 @@ function HqUsers({ lang }) {
   useEffect(()=>{ loadUsers(); },[]);
 
   const invite = async () => {
-    if (!email||!pw) { setMsg("이메일과 비밀번호를 입력하세요."); return; }
-    if (role!=="hq"&&!country) { setMsg("국가를 선택하세요."); return; }
+    if (!email||!pw) { setMsg(t.inv_err_fields); return; }
+    if (role!=="hq"&&!country) { setMsg(t.inv_err_country); return; }
     setBusy(true); setMsg("");
-    // 1. Supabase Admin API로 사용자 생성
-    const {data, error} = await sb.auth.admin.createUser({
+    const {error} = await sb.auth.signUp({
       email, password: pw,
-      email_confirm: true,
-      user_metadata: { role, country: role==="hq"?null:country }
+      options:{ data:{ role, country: role==="hq"?null:country } }
     });
-    if (error) {
-      // admin API 없으면 일반 signUp 사용
-      const {error:e2} = await sb.auth.signUp({
-        email, password: pw,
-        options:{ data:{ role, country: role==="hq"?null:country } }
-      });
-      if (e2) { setMsg(t.inv_err_fields+" "+e2.message); setBusy(false); return; }
-    }
-    // 2. profiles 직접 upsert (트리거 실패 대비)
+    if (error) { setMsg("생성 실패: "+error.message); setBusy(false); return; }
     await sb.from("profiles").upsert({
       email, role, country: role==="hq"?null:country
     }, {onConflict:"email"});
     setMsg(`✓ ${email} 계정 생성 완료`);
-    setEmail(""); setPw(""); setCountry(""); setRole("store");
+    setEmail(""); setPw(""); setCountry(""); setRole("hr");
     setBusy(false); loadUsers();
   };
 
