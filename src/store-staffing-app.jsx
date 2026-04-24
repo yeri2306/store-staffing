@@ -451,7 +451,7 @@ function StoreView({ profile, lang, setLang }) {
   const t = useT(lang);
   const blank = () => ({store_code:"", store_name:"", month:"", submitter:""});
   const [info,       setInfo]      = useState(blank());
-  const [searchOpen, setSearchOpen] = useState(false);
+  const [inputFocus, setInputFocus] = useState(false);
   const [emps,  setEmps]  = useState([{id:1,name:"",type:"FT",job_title:"",contract_start:"",contract_end:"",hours:""}]);
   const [subs,  setSubs]  = useState([]);
   const [saved, setSaved] = useState(false);
@@ -491,11 +491,12 @@ function StoreView({ profile, lang, setLang }) {
     loadSubs();
   };
 
+  const allStores = STORE_MAP[profile.country]||[];
   const storeMatches = (() => {
-    const q = (info.store_name||"").toLowerCase();
-    const stores = STORE_MAP[profile.country]||[];
-    return q ? stores.filter(s=>s.name.toLowerCase().includes(q)||s.code.toLowerCase().includes(q)) : stores;
+    const q = (info.store_name||"").toLowerCase().trim();
+    return q ? allStores.filter(s=>s.name.toLowerCase().includes(q)||s.code.toLowerCase().includes(q)) : allStores;
   })();
+  const showDropdown = inputFocus && storeMatches.length > 0 && !allStores.some(s=>s.name===info.store_name);
 
   const thStyle = {fontSize:11,fontWeight:500,color:"var(--color-text-secondary)",
     padding:"7px 8px",textAlign:"left",borderBottom:"0.5px solid var(--color-border-secondary)",
@@ -529,17 +530,17 @@ function StoreView({ profile, lang, setLang }) {
             <input
               value={info.store_name}
               onChange={e=>{ si("store_name",e.target.value); si("store_code",""); }}
-              onFocus={()=>setSearchOpen(true)}
-              onBlur={()=>setTimeout(()=>setSearchOpen(false),200)}
+              onFocus={()=>setInputFocus(true)}
+              onBlur={()=>setTimeout(()=>setInputFocus(false),200)}
               placeholder={t.store_ph}
               style={{...inputStyle(false),padding:"7px 10px"}}
               autoComplete="off"
             />
-            {searchOpen && storeMatches.length > 0 && (
+            {showDropdown && (
               <div style={{position:"absolute",top:"100%",left:0,right:0,zIndex:1000,background:"var(--color-background-primary)",border:"0.5px solid var(--color-border-secondary)",borderRadius:"var(--border-radius-md)",boxShadow:"0 4px 12px rgba(0,0,0,0.12)",marginTop:2,maxHeight:220,overflowY:"auto"}}>
                 {storeMatches.map(s=>(
                   <div key={s.code}
-                    onMouseDown={e=>{ e.preventDefault(); si("store_name",s.name); si("store_code",s.code); setSearchOpen(false); }}
+                    onMouseDown={e=>{ e.preventDefault(); si("store_name",s.name); si("store_code",s.code); setInputFocus(false); }}
                     style={{padding:"9px 12px",fontSize:13,cursor:"pointer",borderBottom:"0.5px solid var(--color-border-tertiary)",display:"flex",justifyContent:"space-between",alignItems:"center"}}
                     onMouseEnter={e=>e.currentTarget.style.background="var(--color-background-secondary)"}
                     onMouseLeave={e=>e.currentTarget.style.background="transparent"}>
