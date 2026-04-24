@@ -132,7 +132,7 @@ const T = {
     history_title: (c,n) => `${c} Submission History (${n})`,
     hq_title: "HQ Dashboard", hq_sub: (s,d) => `${s} submissions · ${d} SAP rows`,
     refresh: "↻ Refresh",
-    tab_dashboard: "Dashboard", tab_upload: "SAP Upload", tab_raw: "Data", tab_users: "Users",
+    tab_dashboard: "Dashboard", tab_upload: "Monthly Sales", tab_raw: "Data", tab_users: "Users",
     loading: "Loading...", no_data: "No data yet.",
     invite_title: "Create New Account",
     inv_email: "Email *", inv_pw: "Password *", inv_role: "Role *", inv_country: "Country",
@@ -144,7 +144,7 @@ const T = {
     users_list: (n) => `Registered Users (${n})`,
     col_email: "Email", col_role: "Role", col_country_h: "Country", col_change: "Change",
     hq_badge: "HQ", store_badge: "Store",
-    sap_desc: "Upload SAP Excel — auto-mapped by store code. Duplicate uploads will overwrite.",
+    sap_desc: "Upload monthly sales & visitors by store code. Duplicate uploads will overwrite.",
     sap_dl: "Download Template", sap_ul_btn: (n) => `Import ${n} rows to Supabase`,
     sap_uploading: "Uploading...", sap_current: (n) => `Current SAP data: ${n} rows`,
     sap_reset: "Reset All", col_map: "Column Mapping",
@@ -182,7 +182,7 @@ const T = {
     history_title: (c,n) => `${c} 제출 이력 (${n}건)`,
     hq_title: "HQ 대시보드", hq_sub: (s,d) => `인력 제출 ${s}건 · SAP ${d}행`,
     refresh: "↻ 새로고침",
-    tab_dashboard: "대시보드", tab_upload: "SAP 업로드", tab_raw: "원본 데이터", tab_users: "사용자 관리",
+    tab_dashboard: "대시보드", tab_upload: "매출 업로드", tab_raw: "원본 데이터", tab_users: "사용자 관리",
     loading: "로딩 중...", no_data: "아직 수집된 데이터가 없습니다.",
     invite_title: "신규 계정 발급",
     inv_email: "이메일 *", inv_pw: "비밀번호 *", inv_role: "역할 *", inv_country: "담당 국가",
@@ -194,7 +194,7 @@ const T = {
     users_list: (n) => `등록된 사용자 (${n}명)`,
     col_email: "이메일", col_role: "역할", col_country_h: "담당 국가", col_change: "변경",
     hq_badge: "HQ", store_badge: "매장",
-    sap_desc: "SAP 엑셀을 업로드하면 매장코드 기준으로 자동 매핑됩니다. 중복 업로드 시 덮어씁니다.",
+    sap_desc: "매장별 월 매출·입점객 데이터를 업로드하세요. 중복 업로드 시 덮어씁니다.",
     sap_dl: "템플릿 다운로드", sap_ul_btn: (n) => `${n}행 Supabase에 저장`,
     sap_uploading: "업로드 중...", sap_current: (n) => `현재 SAP 데이터: ${n}행`,
     sap_reset: "전체 초기화", col_map: "컬럼 매핑",
@@ -232,7 +232,7 @@ const T = {
     history_title: (c,n) => `${c} 提出履歴 (${n}件)`,
     hq_title: "HQダッシュボード", hq_sub: (s,d) => `人員提出 ${s}件 · SAP ${d}行`,
     refresh: "↻ 更新",
-    tab_dashboard: "ダッシュボード", tab_upload: "SAPアップロード", tab_raw: "データ", tab_users: "ユーザー管理",
+    tab_dashboard: "ダッシュボード", tab_upload: "売上アップロード", tab_raw: "データ", tab_users: "ユーザー管理",
     loading: "読み込み中...", no_data: "データがありません。",
     invite_title: "新規アカウント発行",
     inv_email: "メール *", inv_pw: "パスワード *", inv_role: "役割 *", inv_country: "担当国",
@@ -244,7 +244,7 @@ const T = {
     users_list: (n) => `登録ユーザー (${n}名)`,
     col_email: "メール", col_role: "役割", col_country_h: "担当国", col_change: "変更",
     hq_badge: "HQ", store_badge: "店舗",
-    sap_desc: "SAP ExcelをアップロードするとストアコードでAuto Mappingされます。",
+    sap_desc: "店舗別の月次売上・来店数データをアップロードしてください。重複アップロードは上書きされます。",
     sap_dl: "テンプレートDL", sap_ul_btn: (n) => `${n}行をSupabaseに保存`,
     sap_uploading: "アップロード中...", sap_current: (n) => `現在のSAPデータ: ${n}行`,
     sap_reset: "全初期化", col_map: "カラムマッピング",
@@ -282,7 +282,7 @@ const T = {
     history_title: (c,n) => `${c} 提交记录 (${n}条)`,
     hq_title: "HQ 总览", hq_sub: (s,d) => `人员提交 ${s}条 · SAP ${d}行`,
     refresh: "↻ 刷新",
-    tab_dashboard: "概览", tab_upload: "SAP上传", tab_raw: "原始数据", tab_users: "用户管理",
+    tab_dashboard: "概览", tab_upload: "销售上传", tab_raw: "原始数据", tab_users: "用户管理",
     loading: "加载中...", no_data: "暂无数据。",
     invite_title: "创建新账号",
     inv_email: "邮箱 *", inv_pw: "密码 *", inv_role: "角色 *", inv_country: "负责国家",
@@ -294,7 +294,7 @@ const T = {
     users_list: (n) => `已注册用户 (${n}人)`,
     col_email: "邮箱", col_role: "角色", col_country_h: "负责国家", col_change: "修改",
     hq_badge: "HQ", store_badge: "门店",
-    sap_desc: "上传SAP Excel，将按门店代码自动映射。重复上传将覆盖。",
+    sap_desc: "请上传各门店月度销售额及入店客数数据。重复上传将覆盖。",
     sap_dl: "下载模板", sap_ul_btn: (n) => `将${n}行导入Supabase`,
     sap_uploading: "上传中...", sap_current: (n) => `当前SAP数据: ${n}行`,
     sap_reset: "全部重置", col_map: "列映射",
@@ -491,12 +491,18 @@ function StoreView({ profile, lang, setLang }) {
     loadSubs();
   };
 
-  const allStores = STORE_MAP[profile.country]||[];
+  // country가 없으면 전체 매장에서 검색
+  const allStores = STORE_MAP[profile.country] || Object.values(STORE_MAP).flat();
   const storeMatches = (() => {
     const q = (info.store_name||"").toLowerCase().trim();
-    return q ? allStores.filter(s=>s.name.toLowerCase().includes(q)||s.code.toLowerCase().includes(q)) : allStores;
+    if (!q) return allStores;
+    return allStores.filter(s=>
+      s.name.toLowerCase().includes(q) ||
+      s.code.toLowerCase().includes(q)
+    );
   })();
-  const showDropdown = inputFocus && storeMatches.length > 0 && !allStores.some(s=>s.name===info.store_name);
+  const isExactMatch = allStores.some(s=>s.name===info.store_name);
+  const showDropdown = inputFocus && storeMatches.length > 0 && !isExactMatch;
 
   const thStyle = {fontSize:11,fontWeight:500,color:"var(--color-text-secondary)",
     padding:"7px 8px",textAlign:"left",borderBottom:"0.5px solid var(--color-border-secondary)",
@@ -1206,12 +1212,12 @@ function HqUpload({ sapData, onSaveSap, onDone, lang }) {
   };
 
   const downloadTemplate = () => {
-    const cols=["store_code","country","store_name","month","sales","visitors","achievement_rate","defect_rate"];
-    const sample=[["US1001","US","GM_NewYork_FS_Soho","2025-03",158000000,3200,92.5,1.2]];
+    const cols=["store_code","country","store_name","month","sales","visitors"];
+    const sample=[["US1001","US","GM_NewYork_FS_Soho","2025-03",158000000,3200]];
     const ws=XLSX.utils.aoa_to_sheet([cols,...sample]);
     ws["!cols"]=cols.map(()=>({wch:18}));
-    const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,"SAP_Data");
-    XLSX.writeFile(wb,"SAP_Upload_Template.xlsx");
+    const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,"Sales_Data");
+    XLSX.writeFile(wb,"Monthly_Sales_Visitors_Template.xlsx");
   };
 
   return (
