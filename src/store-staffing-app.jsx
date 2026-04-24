@@ -132,7 +132,7 @@ const T = {
     history_title: (c,n) => `${c} Submission History (${n})`,
     hq_title: "HQ Dashboard", hq_sub: (s,d) => `${s} submissions · ${d} SAP rows`,
     refresh: "↻ Refresh",
-    tab_dashboard: "Dashboard", tab_upload: "Monthly Sales", tab_raw: "Data", tab_users: "Users",
+    tab_dashboard: "Dashboard", tab_input: "Data Input", tab_upload: "Monthly Sales", tab_raw: "Data", tab_users: "Users",
     loading: "Loading...", no_data: "No data yet.",
     invite_title: "Create New Account",
     inv_email: "Email *", inv_pw: "Password *", inv_role: "Role *", inv_country: "Country",
@@ -183,7 +183,7 @@ const T = {
     history_title: (c,n) => `${c} 제출 이력 (${n}건)`,
     hq_title: "HQ 대시보드", hq_sub: (s,d) => `인력 제출 ${s}건 · SAP ${d}행`,
     refresh: "↻ 새로고침",
-    tab_dashboard: "대시보드", tab_upload: "매출 업로드", tab_raw: "원본 데이터", tab_users: "사용자 관리",
+    tab_dashboard: "대시보드", tab_input: "데이터 입력", tab_upload: "매출 업로드", tab_raw: "원본 데이터", tab_users: "사용자 관리",
     loading: "로딩 중...", no_data: "아직 수집된 데이터가 없습니다.",
     invite_title: "신규 계정 발급",
     inv_email: "이메일 *", inv_pw: "비밀번호 *", inv_role: "역할 *", inv_country: "담당 국가",
@@ -234,7 +234,7 @@ const T = {
     history_title: (c,n) => `${c} 提出履歴 (${n}件)`,
     hq_title: "HQダッシュボード", hq_sub: (s,d) => `人員提出 ${s}件 · SAP ${d}行`,
     refresh: "↻ 更新",
-    tab_dashboard: "ダッシュボード", tab_upload: "売上アップロード", tab_raw: "データ", tab_users: "ユーザー管理",
+    tab_dashboard: "ダッシュボード", tab_input: "データ入力", tab_upload: "売上アップロード", tab_raw: "データ", tab_users: "ユーザー管理",
     loading: "読み込み中...", no_data: "データがありません。",
     invite_title: "新規アカウント発行",
     inv_email: "メール *", inv_pw: "パスワード *", inv_role: "役割 *", inv_country: "担当国",
@@ -285,7 +285,7 @@ const T = {
     history_title: (c,n) => `${c} 提交记录 (${n}条)`,
     hq_title: "HQ 总览", hq_sub: (s,d) => `人员提交 ${s}条 · SAP ${d}行`,
     refresh: "↻ 刷新",
-    tab_dashboard: "概览", tab_upload: "销售上传", tab_raw: "原始数据", tab_users: "用户管理",
+    tab_dashboard: "概览", tab_input: "数据录入", tab_upload: "销售上传", tab_raw: "原始数据", tab_users: "用户管理",
     loading: "加载中...", no_data: "暂无数据。",
     invite_title: "创建新账号",
     inv_email: "邮箱 *", inv_pw: "密码 *", inv_role: "角色 *", inv_country: "负责国家",
@@ -451,9 +451,9 @@ function NoProfileScreen({ lang, setLang }) {
   );
 }
 
-function StoreView({ profile, lang, setLang }) {
+function StoreView({ profile, lang, setLang, isHqMode=false, onSubmitDone }) {
   const t = useT(lang);
-  const blank = () => ({store_code:"", store_name:"", month:"", submitter:""});
+  const blank = () => ({store_code:"", store_name:"", month:"", submitter:"", brand:"GM"});
   const [info,       setInfo]      = useState(blank());
   const [inputFocus, setInputFocus] = useState(false);
   const [emps,  setEmps]  = useState([{id:1,name:"",type:"FT",job_title:"",contract_start:"",contract_end:"",hours:""}]);
@@ -485,6 +485,7 @@ function StoreView({ profile, lang, setLang }) {
     const {error} = await sb.from("submissions").insert({
       store_code: sc, store_name: info.store_name,
       country: profile.country, month: info.month,
+      brand: info.brand || "GM",
       submitter: info.submitter, employees: emps,
     });
     setBusy(false);
@@ -515,15 +516,15 @@ function StoreView({ profile, lang, setLang }) {
 
   return (
     <div style={{maxWidth:760,margin:"0 auto",padding:"1.5rem 1rem"}}>
-      {/* 상단 우측: 이메일 + 로그아웃 */}
-      <div style={{display:"flex",justifyContent:"flex-end",alignItems:"center",gap:16,marginBottom:"2rem"}}>
+      {/* 상단 우측: 이메일 + 로그아웃 (HQ 모드에서는 숨김) */}
+      {!isHqMode && <div style={{display:"flex",justifyContent:"flex-end",alignItems:"center",gap:16,marginBottom:"2rem"}}>
         <span style={{fontSize:12,color:"var(--color-text-secondary)"}}>{profile.email}</span>
         <LangSelector lang={lang} setLang={setLang}/>
         <button onClick={()=>sb.auth.signOut()}
           style={{fontSize:12,color:"var(--color-text-tertiary)",background:"none",border:"0.5px solid var(--color-border-tertiary)",borderRadius:"var(--border-radius-md)",padding:"4px 12px",cursor:"pointer"}}>
           {t.logout}
         </button>
-      </div>
+      </div>}
       <div style={{marginBottom:"1.5rem"}}>
         <p style={{fontSize:20,fontWeight:500,margin:"0 0 8px",color:"var(--color-text-primary)"}}>{t.page_title}</p>
         <p style={{fontSize:13,color:"var(--color-text-secondary)",margin:0,lineHeight:1.7,maxWidth:580}}>
@@ -534,7 +535,27 @@ function StoreView({ profile, lang, setLang }) {
       {/* 기본 정보 */}
       <div style={{...cardStyle, marginBottom:10}}>
         <p style={{fontSize:12,fontWeight:500,color:"var(--color-text-secondary)",margin:"0 0 12px"}}>{t.basic_info}</p>
-        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:10}}>
+        <div style={{display:"grid",gridTemplateColumns:"120px 1fr 1fr",gap:10,marginBottom:10}}>
+          {/* Brand 선택 */}
+          <div>
+            <label style={{fontSize:11,color:"var(--color-text-secondary)",display:"block",marginBottom:4}}>Brand *</label>
+            <div style={{display:"flex",gap:8}}>
+              {["GM","TAM"].map(b=>{
+                const active = info.brand === b;
+                return (
+                  <button key={b} type="button" onClick={()=>si("brand",b)}
+                    style={{flex:1,padding:"8px 0",fontSize:13,fontWeight:600,cursor:"pointer",
+                      borderRadius:"var(--border-radius-md)",
+                      border:active?"1.5px solid #1F3864":"0.5px solid #ccc",
+                      background:active?"#1F3864":"transparent",
+                      color:active?"#ffffff":"#999",
+                      transition:"all .15s"}}>
+                    {b}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
           <div style={{position:"relative"}}>
             <label style={{fontSize:11,color:"var(--color-text-secondary)",display:"block",marginBottom:4}}>{t.store} *</label>
             <input
@@ -584,10 +605,10 @@ function StoreView({ profile, lang, setLang }) {
           <div style={{display:"flex",gap:8}}>
             <button type="button" onClick={()=>{
               const stores = STORE_MAP[profile.country]||[];
-              const cols=["매장코드","매장명","성명","계약형태(FT/PT)","계약시작일(YYYY-MM-DD)","계약종료일(YYYY-MM-DD)","계약근로시간(h/주)"];
+              const cols=["brand","매장코드","매장명","성명","계약형태(FT/PT)","계약시작일(YYYY-MM-DD)","계약종료일(YYYY-MM-DD)","계약근로시간(h/주)"];
               const sample = stores.flatMap(s=>[
-                [s.code, s.name, "Hong Gil-dong", "FT", "2024-01-01", "", "40"],
-                [s.code, s.name, "Kim Young-hee", "PT", "2023-06-01", "2025-12-31", "20"],
+                ["GM", s.code, s.name, "Hong Gil-dong", "FT", "2024-01-01", "", "40"],
+                ["GM", s.code, s.name, "Kim Young-hee", "PT", "2023-06-01", "2025-12-31", "20"],
               ]);
               const ws=XLSX.utils.aoa_to_sheet([cols,...sample]);
               ws["!cols"]=cols.map(()=>({wch:26}));
@@ -613,20 +634,22 @@ function StoreView({ profile, lang, setLang }) {
 
                   if(hasStoreCol) {
                     if(!month||!submitter){ alert(t.err_basic); return; }
-                    const rows = raw.slice(1).filter(r=>r[0]||r[2]);
+                    const rows = raw.slice(1).filter(r=>r[0]||r[1]||r[2]);
                     const byStore = {};
                     rows.forEach((r,i)=>{
-                      const sc = String(r[0]||"").trim();
-                      const sname = String(r[1]||"").trim() || sc;
+                      // brand, store_code, store_name, name, type, start, end, hours
+                      const brand = String(r[0]||"GM").trim();
+                      const sc = String(r[1]||"").trim();
+                      const sname = String(r[2]||"").trim() || sc;
                       if(!sc) return;
-                      if(!byStore[sc]) byStore[sc]={store_code:sc, store_name:sname, emps:[]};
-                      if(r[2]) byStore[sc].emps.push({
+                      if(!byStore[sc]) byStore[sc]={store_code:sc, store_name:sname, brand, emps:[]};
+                      if(r[3]) byStore[sc].emps.push({
                         id:Date.now()+i,
-                        name:String(r[2]||"").trim(),
-                        type:String(r[3]||"FT").trim().toUpperCase()==="PT"?"PT":"FT",
-                        contract_start:String(r[4]||"").trim(),
-                        contract_end:String(r[5]||"").trim(),
-                        hours:String(r[6]||"").trim(),
+                        name:String(r[3]||"").trim(),
+                        type:String(r[4]||"FT").trim().toUpperCase()==="PT"?"PT":"FT",
+                        contract_start:String(r[5]||"").trim(),
+                        contract_end:String(r[6]||"").trim(),
+                        hours:String(r[7]||"").trim(),
                       });
                     });
                     setBusy(true);
@@ -634,6 +657,7 @@ function StoreView({ profile, lang, setLang }) {
                       await sb.from("submissions").insert({
                         store_code:sc, store_name:data.store_name,
                         country:profile.country, month, submitter,
+                        brand: data.brand || "GM",
                         employees:data.emps,
                       });
                     }
@@ -870,7 +894,7 @@ function HqView({ profile, lang, setLang }) {
       </div>
 
       <div style={{borderBottom:"0.5px solid var(--color-border-tertiary)",marginBottom:"1.25rem",display:"flex"}}>
-        {[["dashboard",tl.tab_dashboard],["upload",tl.tab_upload],["raw",tl.tab_raw],["users",tl.tab_users]].map(([tv,l])=>(
+        {[["dashboard",tl.tab_dashboard],["input",tl.tab_input||"Data Input"],["upload",tl.tab_upload],["raw",tl.tab_raw],["users",tl.tab_users]].map(([tv,l])=>(
           <button key={tv} style={ts(tv)} onClick={()=>setTab(tv)}>{l}</button>
         ))}
       </div>
@@ -879,6 +903,7 @@ function HqView({ profile, lang, setLang }) {
         ? <p style={{fontSize:13,color:"var(--color-text-secondary)",textAlign:"center",padding:"2rem"}}>{tl.loading}</p>
         : <>
             {tab==="dashboard" && <HqDashboard subs={subs} sapData={sapData} merged={merged} lang={lang}/>}
+            {tab==="input"     && <HqInputSelector profile={profile} lang={lang} onDone={loadAll}/>}
             {tab==="upload"    && <HqUpload sapData={sapData} onDone={loadAll} lang={lang}/>}
             {tab==="raw"       && <HqRaw merged={merged} subs={subs} lang={lang}/>}
             {tab==="users"     && <HqUsers lang={lang}/>}
@@ -1010,6 +1035,48 @@ function HqUsers({ lang }) {
           </table>
         </div>
       )}
+    </div>
+  );
+}
+
+// ── HqInputSelector ───────────────────────────────────────────────────────────
+// HQ가 국가를 선택해서 해당 국가 매장에 직접 입력할 수 있는 래퍼
+function HqInputSelector({ profile, lang, onDone }) {
+  const t = useT(lang);
+  const [selectedCountry, setSelectedCountry] = useState("");
+
+  if (!selectedCountry) return (
+    <div style={{maxWidth:480}}>
+      <p style={{fontSize:13,fontWeight:500,color:"var(--color-text-primary)",marginBottom:16}}>
+        입력할 국가를 선택하세요
+      </p>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10}}>
+        {COUNTRIES.map(c=>(
+          <button key={c} type="button" onClick={()=>setSelectedCountry(c)}
+            style={{padding:"14px 0",fontSize:14,fontWeight:500,cursor:"pointer",
+              border:"0.5px solid var(--color-border-secondary)",
+              borderRadius:"var(--border-radius-lg)",
+              background:"var(--color-background-primary)",
+              color:"var(--color-text-primary)"}}>
+            {c}
+            <div style={{fontSize:11,color:"var(--color-text-tertiary)",marginTop:4,fontWeight:400}}>
+              {(STORE_MAP[c]||[]).length} stores
+            </div>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+
+  // 선택된 국가의 가상 profile을 StoreView에 넘겨줌
+  const fakeProfile = { ...profile, country: selectedCountry };
+  return (
+    <div>
+      <button type="button" onClick={()=>setSelectedCountry("")}
+        style={{fontSize:12,color:"var(--color-text-secondary)",background:"none",border:"none",cursor:"pointer",marginBottom:16}}>
+        ← 국가 재선택
+      </button>
+      <StoreView profile={fakeProfile} lang={lang} setLang={()=>{}} isHqMode={true} onSubmitDone={onDone}/>
     </div>
   );
 }
