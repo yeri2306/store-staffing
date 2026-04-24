@@ -516,6 +516,8 @@ function StoreView({ profile, lang, setLang, isHqMode=false, onSubmitDone }) {
     }
     return profile.country || "";
   };
+
+  const thStyle = {fontSize:11,fontWeight:500,color:"var(--color-text-secondary)",
     padding:"7px 8px",textAlign:"left",borderBottom:"0.5px solid var(--color-border-secondary)",
     background:"var(--color-background-secondary)",whiteSpace:"nowrap"};
   const tdBase = {padding:"6px 6px",borderBottom:"0.5px solid var(--color-border-tertiary)"};
