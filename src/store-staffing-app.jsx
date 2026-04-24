@@ -910,7 +910,7 @@ function HqView({ profile, lang, setLang }) {
         ? <p style={{fontSize:13,color:"var(--color-text-secondary)",textAlign:"center",padding:"2rem"}}>{tl.loading}</p>
         : <>
             {tab==="dashboard" && <HqDashboard subs={subs} sapData={sapData} merged={merged} lang={lang}/>}
-            {tab==="input"     && <HqInputSelector profile={profile} lang={lang} setLang={setLang} onDone={loadAll}/>}
+            {tab==="input"     && <HqBulkInput lang={lang} onDone={loadAll}/>}
             {tab==="upload"    && <HqUpload sapData={sapData} onDone={loadAll} lang={lang}/>}
             {tab==="raw"       && <HqRaw merged={merged} subs={subs} lang={lang}/>}
             {tab==="users"     && <HqUsers lang={lang}/>}
@@ -1046,44 +1046,128 @@ function HqUsers({ lang }) {
   );
 }
 
-// ── HqInputSelector ───────────────────────────────────────────────────────────
-// HQ가 국가를 선택해서 해당 국가 매장에 직접 입력할 수 있는 래퍼
-function HqInputSelector({ profile, lang, setLang, onDone }) {
+// ── HqBulkInput ───────────────────────────────────────────────────────────────
+// 국가 선택 없이 바로 템플릿 다운 → 엑셀 업로드 → 매장코드로 국가 자동 매핑
+function HqBulkInput({ lang, onDone }) {
   const t = useT(lang);
-  const [selectedCountry, setSelectedCountry] = useState("");
+  const [month,     setMonth]     = useState("");
+  const [submitter, setSubmitter] = useState("");
+  const [status,    setStatus]    = useState("");
+  const [busy,      setBusy]      = useState(false);
+  const fileRef = useRef();
 
-  if (!selectedCountry) return (
-    <div style={{maxWidth:480}}>
-      <p style={{fontSize:13,fontWeight:500,color:"var(--color-text-primary)",marginBottom:16}}>
-        입력할 국가를 선택하세요
-      </p>
-      <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10}}>
-        {COUNTRIES.map(c=>(
-          <button key={c} type="button" onClick={()=>setSelectedCountry(c)}
-            style={{padding:"14px 0",fontSize:14,fontWeight:500,cursor:"pointer",
-              border:"0.5px solid var(--color-border-secondary)",
-              borderRadius:"var(--border-radius-lg)",
-              background:"var(--color-background-primary)",
-              color:"var(--color-text-primary)"}}>
-            {c}
-            <div style={{fontSize:11,color:"var(--color-text-tertiary)",marginTop:4,fontWeight:400}}>
-              {(STORE_MAP[c]||[]).length} stores
-            </div>
-          </button>
-        ))}
-      </div>
-    </div>
-  );
+  const getCountryByCode = (code) => {
+    for (const [c, stores] of Object.entries(STORE_MAP)) {
+      if (stores.some(s=>s.code===code)) return c;
+    }
+    return "";
+  };
 
-  // 선택된 국가의 가상 profile을 StoreView에 넘겨줌
-  const fakeProfile = { ...profile, country: selectedCountry };
+  const downloadTemplate = () => {
+    const allStores = Object.values(STORE_MAP).flat();
+    const cols = ["brand","store_code","store_name","name","type(FT/PT)","contract_start(YYYY-MM-DD)","contract_end(YYYY-MM-DD)","hours_per_week"];
+    const sample = allStores.slice(0,3).flatMap(s=>[
+      ["GM", s.code, s.name, "Full Name", "FT", "2024-01-01", "", "40"],
+      ["GM", s.code, s.name, "Full Name", "PT", "2024-06-01", "2025-12-31", "20"],
+    ]);
+    const ws = XLSX.utils.aoa_to_sheet([cols, ...sample]);
+    ws["!cols"] = cols.map(()=>({wch:22}));
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Employee_Roster");
+    XLSX.writeFile(wb, "Global_Employee_Roster_Template.xlsx");
+  };
+
+  const onFile = async (e) => {
+    const file = e.target.files[0]; if (!file) return;
+    if (!month || !submitter) { setStatus("마감 월과 제출자를 먼저 입력하세요."); return; }
+    const reader = new FileReader();
+    reader.onload = async (ev) => {
+      const wb = XLSX.read(ev.target.result, {type:"array"});
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const raw = XLSX.utils.sheet_to_json(ws, {header:1, defval:""});
+      if (raw.length < 2) { setStatus("파일이 비어 있습니다."); return; }
+
+      const rows = raw.slice(1).filter(r=>r[1]);
+      const byStore = {};
+      rows.forEach((r,i)=>{
+        const brand   = String(r[0]||"GM").trim();
+        const sc      = String(r[1]||"").trim();
+        const sname   = String(r[2]||"").trim() || sc;
+        const country = getCountryByCode(sc);
+        if (!sc) return;
+        if (!byStore[sc]) byStore[sc] = {store_code:sc, store_name:sname, brand, country, emps:[]};
+        if (r[3]) byStore[sc].emps.push({
+          id: Date.now()+i,
+          name:  String(r[3]||"").trim(),
+          type:  String(r[4]||"FT").trim().toUpperCase()==="PT"?"PT":"FT",
+          brand,
+          contract_start: String(r[5]||"").trim(),
+          contract_end:   String(r[6]||"").trim(),
+          hours:          String(r[7]||"").trim(),
+        });
+      });
+
+      setBusy(true); setStatus("");
+      let count = 0;
+      for (const [sc, data] of Object.entries(byStore)) {
+        const {error} = await sb.from("submissions").insert({
+          store_code:  sc,
+          store_name:  data.store_name,
+          country:     data.country,
+          month,
+          submitter,
+          brand:       data.brand || "GM",
+          employees:   data.emps,
+        });
+        if (!error) count++;
+      }
+      setBusy(false);
+      setStatus(`✓ ${count}개 매장 데이터 제출 완료`);
+      if (fileRef.current) fileRef.current.value = "";
+      onDone();
+    };
+    reader.readAsArrayBuffer(file);
+    e.target.value = "";
+  };
+
   return (
-    <div>
-      <button type="button" onClick={()=>setSelectedCountry("")}
-        style={{fontSize:12,color:"var(--color-text-secondary)",background:"none",border:"none",cursor:"pointer",marginBottom:16}}>
-        ← 국가 재선택
+    <div style={{maxWidth:600}}>
+      <p style={{fontSize:13,color:"var(--color-text-secondary)",margin:"0 0 1.5rem"}}>
+        템플릿을 다운받아 매장코드·직원정보를 입력 후 업로드하세요.<br/>
+        <strong>매장코드만 있으면 국가는 자동으로 매핑됩니다.</strong>
+      </p>
+
+      {/* 마감 월 + 제출자 */}
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:16}}>
+        <div>
+          <label style={{fontSize:11,color:"var(--color-text-secondary)",display:"block",marginBottom:4}}>마감 월 *</label>
+          <select value={month} onChange={e=>setMonth(e.target.value)}
+            style={{width:"100%",padding:"8px 10px",border:"0.5px solid var(--color-border-secondary)",borderRadius:"var(--border-radius-md)",background:"var(--color-background-primary)",color:"var(--color-text-primary)",fontSize:13}}>
+            <option value="">선택</option>
+            {MONTHS.map(m=><option key={m} value={m}>{m}</option>)}
+          </select>
+        </div>
+        <div>
+          <label style={{fontSize:11,color:"var(--color-text-secondary)",display:"block",marginBottom:4}}>제출자 *</label>
+          <input value={submitter} onChange={e=>setSubmitter(e.target.value)} placeholder="이름"
+            style={{width:"100%",boxSizing:"border-box",padding:"8px 10px",border:"0.5px solid var(--color-border-secondary)",borderRadius:"var(--border-radius-md)",fontSize:13,background:"var(--color-background-primary)",color:"var(--color-text-primary)"}}/>
+        </div>
+      </div>
+
+      {/* 템플릿 다운로드 */}
+      <button type="button" onClick={downloadTemplate}
+        style={{width:"100%",padding:"10px",marginBottom:10,border:"0.5px solid var(--color-border-secondary)",borderRadius:"var(--border-radius-md)",background:"var(--color-background-secondary)",color:"var(--color-text-primary)",fontSize:13,cursor:"pointer"}}>
+        ↓ Global Employee Roster Template 다운로드
       </button>
-      <StoreView profile={fakeProfile} lang={lang} setLang={setLang} isHqMode={true} onSubmitDone={onDone}/>
+
+      {/* 엑셀 업로드 */}
+      <label style={{display:"block",border:"1px dashed var(--color-border-secondary)",borderRadius:"var(--border-radius-lg)",padding:"2rem",textAlign:"center",cursor:"pointer"}}>
+        <input ref={fileRef} type="file" accept=".xlsx,.xls,.csv" onChange={onFile} style={{display:"none"}}/>
+        <div style={{fontSize:14,color:"var(--color-text-secondary)"}}>{busy?"업로드 중...":"클릭하거나 파일을 드래그하여 업로드"}</div>
+        <div style={{fontSize:12,color:"var(--color-text-tertiary)",marginTop:4}}>.xlsx · .xls · .csv</div>
+      </label>
+
+      {status && <p style={{fontSize:13,color:status.startsWith("✓")?"var(--color-text-success)":"var(--color-text-danger)",margin:"12px 0 0"}}>{status}</p>}
     </div>
   );
 }
